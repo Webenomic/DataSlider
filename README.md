@@ -1,6 +1,6 @@
 # data-slider
 
-Data-Slider is an ES Javascript module that enables straightforward implementation of real-time data-bound progress indicator bars, range input sliders, and seek sliders for media timeline control. 
+Data-Slider is an ES Javascript module that enables straightforward implementation of progress indicator bars, range input sliders, and seek sliders for media timeline control. The module's polyfill is based on the ubiquitously-supported [HTMLProgressElement](https://developer.mozilla.org/en-US/docs/Web/API/HTMLProgressElement). 
 
 Features:
 
