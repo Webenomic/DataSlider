@@ -5,8 +5,8 @@ Data-Slider is an ES Javascript module that enables straightforward implementati
 Features:
 
 - Dependency-free & lightweight
-- Built-in 2-way data binding
 - Supported across all modern browsers & platforms
+- 2-way callback-free live data binding
 - Easily customizable
 
 
