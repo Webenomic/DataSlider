@@ -1,0 +1,62 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../dist/data-slider.js"></script>
+<link rel="stylesheet" href="../dist/data-slider.css"></link>
+
+</head>
+<body>
+
+<div id="sliderDiv" style="left:100px;width:calc(50vw);top:calc(80vh);position:absolute;"></div>
+
+
+<div style="padding-top:40px;" wbn-bind-transform="t1" wbn-bind="foo"> </div>
+
+<input type="number" wbn-bind="foo">
+
+<script>
+
+foo=1;
+
+var t1 = (val) => {return Number(val).toFixed(2) }; 
+var t2 = (val) => {return val+'***'}; 
+
+var slider = new DataSlider(document.getElementById('sliderDiv'),{
+	defaultValue:foo,
+	responsive:true,
+	range:{
+		min:0.25,
+		max:2,
+		decimals:2,
+		step:0.05
+	},
+	ticks: {
+		data:[0.25,0.50,0.75,1,1.25,1.5,2].map((tick,i) => {
+		       return { 
+		    	   value: tick, 
+		    	   label: (val) => { return val + 'x'; },
+		    	   style: tick == 1 ? 'bubble' : 'scale',
+
+	    	   }
+		}),
+		snap:false,
+		labelsClickable: true,
+		//position:'top',
+		style:'bubble'
+	},
+	ribbon: {
+		show:true
+	},
+	handle: {
+		show:true
+	},
+	dataBinding: {
+		bind:"foo"
+	}
+});
+
+</script>
+
+</body>
+
+</html>
