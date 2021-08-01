@@ -5,6 +5,10 @@
     &container {
       -webkit-appearance: none;
       -moz-appearance: none;
+      height:30px;
+      min-height: 30px;
+      cursor: pointer;
+      min-width:128px;
     }
     
     &slider {
@@ -12,14 +16,14 @@
       -moz-appearance: none;
       appearance: none;
       width: inherit;
-      height: 10px;
       cursor:pointer;
       border-radius:4px;
-      position: absolute;
+      position: relative;
       background-color: #474545;
       top: 10px;
       user-select: none;
-      -webkit-user-select: none; 
+      -webkit-user-select: none;
+      min-width: 128px;
     }
     
     
@@ -29,14 +33,14 @@
         &::-webkit-progress-bar {
             cursor:pointer;
             background-color: #474545;
-            border-radius: 2px;
-            height:10px; 
+            border-radius: 4px;
         }
     
         &::-webkit-progress-value {
           cursor:pointer;
           background: #e4a114;
-          border-radius: 2px;
+          border-radius: 4px;
+          margin-left:-2px;
         }
         
         &.hidden_ribbon::-webkit-progress-value {
@@ -46,10 +50,10 @@
         &::-moz-progress-bar {
           cursor:pointer;
           background: #e4a114;
-          border-radius: 2px;
+          border-radius: 4px;
         }
     
-        &.wbn-loading::after {
+        &.wbn_loading::after {
             content: "";
             position: absolute;
             top: 0;
@@ -69,37 +73,23 @@
     }
         
     &handle {
+        cursor:pointer;
+        position: absolute;
+        top:0px;
+        background: #e4a114;
+        user-select: none;
+        -webkit-user-select: none;
         
-        &.round {
-            position: absolute;
-            height: 16px;
-            width: 16px;
-            background: #e4a114;
-            border-radius: 16px;
-            margin: 7px 0px 0px -8px;
-            user-select: none;
-            -webkit-user-select: none; 
-        }
-        
+        &:hover,&:focus {
+            background: rgb(188, 128, 14);
+        } 
     }
     
     &tick {
-        
         &_scale {
             user-select: none;
             -webkit-user-select: none; 
-            font-size:14px;
-            border-left: 2px solid #c0c0c0;
-            height: 10px;
             width: auto;
-            
-            &.bottom {
-                margin-top: 12px;
-            }
-        
-            &.top {
-                margin-top:-15px;
-            }
             
             &.clickable {
                 cursor:pointer;
@@ -128,18 +118,6 @@
             &.wbn_selected {
                 font-weight:bold;
                 background:#e4a114;
-            }
-            
-            &.center {
-                margin-top: -5px;
-            }
-            
-            &.bottom {
-                margin-top: 13px;
-            }
-        
-            &.top {
-                margin-top:-24px;
             }
             
             &.clickable {

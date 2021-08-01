@@ -3,16 +3,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="../dist/data-slider.js"></script>
 <link rel="stylesheet" href="../dist/data-slider.css"></link>
+<style type="text/css">
+body,html {
+    font-family:arial;
+}
 
+</style>
 </head>
-<body>
+<body style="">
 
-<div id="sliderDiv" style="left:100px;width:calc(50vw);top:calc(80vh);position:absolute;"></div>
+<div style="padding:40px;width:700px;">
+<div id="sliderDiv" style="width:100%;"></div>
+</div>
 
 
 <div style="padding-top:40px;" wbn-bind-transform="t1" wbn-bind="foo"> </div>
 
-<input type="number" wbn-bind="foo">
+<input type="number" wbn-bind="foo"><br>
+Slider Height: <input type="range" onInput="slider.config.height = this.value;slider.ui.update();" min="1" max="20" step="1"><br>
+
+Handle Height: <input type="range" onInput="slider.config.handle.height = this.value;slider.ui.update();" min="10" max="80" step="1"><br>
+Handle Width: <input type="range" onInput="slider.config.handle.width = this.value;slider.ui.update();" min="10" max="80" step="1"><br>
+Handle Radius: <input type="range" onInput="slider.config.handle.borderRadius = this.value;slider.ui.update();" min="0" max="80" step="1"><br>
+
+<input type="checkbox" checked onClick="slider.config.handle.show = this.checked;slider.ui.update();"> Show Handle
+<input type="checkbox" checked onClick="slider.config.ribbon.show = this.checked;slider.ui.update();"> Show Ribbon
 
 <script>
 
@@ -22,6 +37,7 @@ var t1 = (val) => {return Number(val).toFixed(2) };
 var t2 = (val) => {return val+'***'}; 
 
 var slider = new DataSlider(document.getElementById('sliderDiv'),{
+	height:5,
 	defaultValue:foo,
 	responsive:true,
 	range:{
@@ -35,13 +51,13 @@ var slider = new DataSlider(document.getElementById('sliderDiv'),{
 		       return { 
 		    	   value: tick, 
 		    	   label: (val) => { return val + 'x'; },
-		    	   style: tick == 1 ? 'bubble' : 'scale',
+		    	   //style: tick == 1 ? 'bubble' : 'scale',
 
 	    	   }
 		}),
 		snap:false,
 		labelsClickable: true,
-		//position:'top',
+		position:'auto',
 		style:'bubble'
 	},
 	ribbon: {
@@ -54,6 +70,8 @@ var slider = new DataSlider(document.getElementById('sliderDiv'),{
 		bind:"foo"
 	}
 });
+
+
 
 </script>
 

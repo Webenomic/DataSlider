@@ -12,6 +12,7 @@ class Slider {
     wbnBindScope: {};
     bindVarName: string;
     ui: SliderUI;
+    value: number;
     
     constructor(container: Container,options: Options) {
         this.container = container;
@@ -59,6 +60,8 @@ class Slider {
         if (window.wbnScope[this.bindVarName] != wbnVal) {
             this.wbnBindScope[this.bindVarName] = wbnVal;
         }
+        
+        this.value = wbnVal;
     }
     
     _updateBindings() {
@@ -76,6 +79,7 @@ class Slider {
         });
         this.ui._updateTicks(val);
         this.ui._updateHandle(this._wbnValToProgVal(val));
+        this.ui._assignAttributes();
     }
   
 }

@@ -17,6 +17,7 @@ export class Defaults {
         }
         
         Object.assign(config, {
+            height: config.height || 10,
             className: config.className || CSSNamespace + 'slider',
             responsive: config.responsive !== undefined ? config.responsive : true,
             defaultValue: config.defaultValue || window[container.getAttribute('wbn-bind') || ''] || 0,
@@ -28,11 +29,18 @@ export class Defaults {
             },
             handle: {
                 show: config.handle?.show != undefined ? config.handle?.show : true,
-                style: config.handle?.style || 'round' 
+                width: config.handle?.width || 'auto',
+                height: config.handle?.height || 'auto',
+                borderRadius: config.handle?.borderRadius || 'auto'
             },
             ribbon: {
                 show: config.ribbon?.show != undefined ? config.ribbon?.show : true,
                 notchSteps: config.ribbon?.notchSteps != undefined ? config.ribbon?.notchSteps : true,
+            },
+            tooltip: {
+                show: config.tooltip?.show != undefined ? config.tooltip?.show : true,
+                position:config.tooltip?.position || 'auto',
+                style: 'square'
             },
             ticks: {
                 data:config.ticks?.data || [],

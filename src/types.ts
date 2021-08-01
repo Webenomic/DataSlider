@@ -9,7 +9,9 @@ export interface Range {
 
 export interface Handle {
     show: boolean,
-    style: 'round' | 'notch' | 'square'
+    width: number | Function | 'auto',
+    height: number | Function | 'auto',
+    borderRadius: number | Function | 'auto'
 }
 
 export interface Ribbon {
@@ -34,10 +36,10 @@ export interface Ticks {
     onTick: Function
 }
 
-export interface TooltipOptions {
+export interface Tooltip {
    show: boolean,
    style: 'round' | 'square',
-   position: 'auto' | 'bottom' | 'top'
+   position: 'handle' | 'bottom' | 'top' | 'auto'
 }
 
 export interface DataBinding {
@@ -48,6 +50,7 @@ export interface DataBinding {
 export type Container = Element;
 
 export interface Options {
+    height: number,
     className: string,
     responsive: boolean,
     ribbon: Ribbon,
@@ -55,7 +58,7 @@ export interface Options {
     range: Range,
     handle: Handle,
     ticks: Ticks,
-    tooltip: TooltipOptions,
+    tooltip: Tooltip,
     dataBinding: DataBinding,
     onReady: Function,
     onUpdate: Function,
