@@ -1,11 +1,9 @@
 import { Defaults } from './defaults';
-import { Options, Container, CSSNamespace} from './types';
+import { Options, CSSNamespace} from './types';
 
 export class Config extends Defaults {
     
-    constructor(container: Container,config: Options) {
+    constructor(container: any,config: Options) {
         super(container, config);
-
-        
     }
 }

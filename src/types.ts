@@ -1,5 +1,10 @@
 export const CSSNamespace: string = 'wbn_ds_';
 
+export interface Label {
+    text: string | Function | undefined,
+    style: string | Function | undefined
+}
+
 export interface Range {
     min: number,
     max: number,
@@ -11,7 +16,9 @@ export interface Handle {
     show: boolean,
     width: number | Function | 'auto',
     height: number | Function | 'auto',
-    borderRadius: number | Function | 'auto'
+    borderRadius: number | Function | 'auto',
+    style: string | undefined,
+    label: Label
 }
 
 export interface Ribbon {
@@ -21,8 +28,11 @@ export interface Ribbon {
 
 export interface Tick {
     value: number,
-    label: number | Function,
-    style: 'scale' | 'bubble' | undefined,
+    label: Label,
+    width: number | Function | 'auto',
+    height: number | Function | 'auto',
+    borderRadius: number | Function | 'auto',
+    style: string | Function | undefined,
     position: 'auto' | 'bottom' | 'top' | undefined
 }
 
@@ -30,7 +40,10 @@ export interface Ticks {
     data: Tick[] | Function | null,
     responsive: true,
     labelsClickable: boolean,
-    style: 'scale' | 'bubble',
+    width: number | Function | 'auto',
+    height: number | Function | 'auto',
+    borderRadius: number | Function | 'auto',
+    style: string | Function | undefined,
     position: 'auto' | 'bottom' | 'top' | 'center',
     snap: boolean,
     onTick: Function
@@ -38,16 +51,19 @@ export interface Ticks {
 
 export interface Tooltip {
    show: boolean,
-   style: 'round' | 'square',
-   position: 'handle' | 'bottom' | 'top' | 'auto'
+   position: 'bottom' | 'top' | 'auto',
+   label: Label,
+   ticks: {
+        show: boolean,
+        label: Label     
+   }
 }
 
 export interface DataBinding {
-    bind: any | undefined,
+    scope: any,
+    property: any | undefined,
     transform: Function
 }
-
-export type Container = Element;
 
 export interface Options {
     height: number,
@@ -62,4 +78,6 @@ export interface Options {
     dataBinding: DataBinding,
     onReady: Function,
     onUpdate: Function,
+    onDragStart: Function,
+    onDragEnd: Function
 }

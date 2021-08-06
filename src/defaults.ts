@@ -1,7 +1,7 @@
-import { Options, Container, CSSNamespace} from './types';
+import { Options, CSSNamespace} from './types';
 
 export class Defaults {
-    constructor(container: Container,config: Options) {
+    constructor(container: any,config: Options) {
         const errors = [
             [(!config),'No DataSlider configuration specified.'],
             [(!config?.range),'No range defined in the DataSlider configuration.']
@@ -40,22 +40,35 @@ export class Defaults {
             tooltip: {
                 show: config.tooltip?.show != undefined ? config.tooltip?.show : true,
                 position:config.tooltip?.position || 'auto',
-                style: 'square'
+                label: {
+                    text:config.tooltip?.label?.text || null,
+                    style:config.tooltip?.label?.style || null
+                },
+                ticks: {
+                    show:config.tooltip?.ticks?.show || config.tooltip?.show || true,
+                    label: {
+                        text:config.tooltip?.ticks?.label?.text || config.tooltip?.label?.text || null,
+                        style:config.tooltip?.ticks?.label?.style || config.tooltip?.label?.style || null,
+                    }
+                }
             },
             ticks: {
                 data:config.ticks?.data || [],
                 style:config.ticks?.style || 'scale',
                 snap: config.ticks?.snap !== undefined ? config.ticks?.snap : true,
                 labelsClickable:config.ticks?.labelsClickable !== undefined ? config.ticks.labelsClickable : true,
-                position:config.ticks?.position || 'auto'
+                position:config.ticks?.position || 'auto',
+                onTick: config.ticks?.onTick || blankCallback
             },
             dataBinding: {
-                bind: config.dataBinding?.bind || window[container.getAttribute('wbn-bind') || ''] || undefined,
+                scope: config.dataBinding?.scope || window,
+                property: config.dataBinding?.property || undefined,
                 transform: config.dataBinding?.transform || window[container.getAttribute('wbn-bind-transform') || ''] || null,    
             },
             onReady: config.onReady || blankCallback,
-            onUpdate: config.onUpdate || blankCallback
-        
+            onUpdate: config.onUpdate || blankCallback,
+            onDragStart: config.onDragStart || blankCallback,
+            onDragEnd: config.onDragEnd || blankCallback,
         });
         
         return config;

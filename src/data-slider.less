@@ -1,35 +1,31 @@
 @import './variables.less';
 
-@{namespace-prefix}  {
+@{slider-namespace-prefix}  {
     
     &container {
       -webkit-appearance: none;
       -moz-appearance: none;
-      height:30px;
-      min-height: 30px;
+      height:auto;
       cursor: pointer;
-      min-width:128px;
+      min-width:100px;
+      touch-action:none;
     }
     
     &slider {
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      appearance: none;
-      width: inherit;
-      cursor:pointer;
-      border-radius:4px;
-      position: relative;
-      background-color: #474545;
-      top: 10px;
-      user-select: none;
-      -webkit-user-select: none;
-      min-width: 128px;
-    }
-    
-    
-    
-    &slider {
-        
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        width: inherit;
+        cursor:pointer;
+        border-radius:4px;
+        position: relative;
+        background-color: #474545;
+        user-select: none;
+        -webkit-user-select: none;
+        min-width: 100px;
+        width: 100%;
+        border:none;
+
         &::-webkit-progress-bar {
             cursor:pointer;
             background-color: #474545;
@@ -38,51 +34,66 @@
     
         &::-webkit-progress-value {
           cursor:pointer;
-          background: #e4a114;
+          background: @mango;
           border-radius: 4px;
-          margin-left:-2px;
+        }
+        
+        &::-moz-progress-bar {
+          cursor:pointer;
+          background: @mango;
+          border-radius: 4px;
         }
         
         &.hidden_ribbon::-webkit-progress-value {
             opacity:0;   
         }
-    
-        &::-moz-progress-bar {
-          cursor:pointer;
-          background: #e4a114;
-          border-radius: 4px;
-        }
-    
-        &.wbn_loading::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.2) 75%, transparent 75%, transparent );
-            z-index: 1;
-            background-size: 50px 50px;
-            animation: move 2s linear infinite;
-            border-top-right-radius: 8px;
-            border-bottom-right-radius: 8px;
-            border-top-left-radius: 20px;
-            border-bottom-left-radius: 20px;
-            overflow: hidden;
+        
+        &.hidden_ribbon::-moz-progress-bar {
+            opacity:0;   
         }
     }
-        
+    
+    &loading::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background-image: linear-gradient(-45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.2) 75%, transparent 75%, transparent );
+        z-index: 1;
+        background-size: 50px 50px;
+        animation: move 2s linear infinite;
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+        overflow: hidden;
+    }
+    
     &handle {
         cursor:pointer;
         position: absolute;
         top:0px;
-        background: #e4a114;
+        background: @mango;
         user-select: none;
         -webkit-user-select: none;
         
         &:hover,&:focus {
             background: rgb(188, 128, 14);
         } 
+    }
+    
+    &tooltip {
+        display:none;
+        position:absolute;
+        background:@dark;
+        text-align: center;
+        color:@white;
+        padding:3px;
+        font-size:11px;
+        border-radius:2px;
+        z-Index:3040;
     }
     
     &tick {
@@ -110,14 +121,13 @@
             color: #fff;
             background: #474747;
             border-radius: 16px;
-            font-size: 14px;
             width: auto;
             height: 16px;
             padding: 3px 5px;
             
             &.wbn_selected {
                 font-weight:bold;
-                background:#e4a114;
+                background:@mango;
             }
             
             &.clickable {
