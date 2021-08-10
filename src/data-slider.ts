@@ -7,7 +7,7 @@ const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 
 class Slider {
     
-    container: any;
+    parent: any;
     config: any;
     wbnBindScope: {};
     bindVarName: string;
@@ -15,20 +15,20 @@ class Slider {
     ui: SliderUI;
     value: number;
     
-    constructor(container: any,options: Options) {
-        this.container = container;
-        this.config = new Config(container, options);
-        this.ui     = new SliderUI(container, options, this);
+    constructor(parent: any,options: Options) {
+        this.parent = parent;
+        this.config = new Config(parent, options);
+        this.ui     = new SliderUI(parent, options, this);
         this.bindVarName = this.config.dataBinding.property;
         this.bindVarScope = this.config.dataBinding.scope;
-        //this.container.slider = this;  
+        //this.parent.slider = this;  
         this.wbnBindScope = {};
         this._createProxy();
     }
     
     reset(val?: number) {
         this.ui._destroy();
-        this.ui = new SliderUI(this.container, this.config, this);
+        this.ui = new SliderUI(this.parent, this.config, this);
         if (val) {
             this._updateValue(this._wbnValToProgVal(val),val);
             this._updateBindings();
@@ -124,5 +124,5 @@ window.DataSlider = Slider || {};
 window.wbnScope = {};
 
 //ES Module export
-const DataSlider = function(container: Element, options?: any) { return new Slider(container, options); }
+const DataSlider = function(parent: Element, options?: any) { return new Slider(parent, options); }
 export {DataSlider};

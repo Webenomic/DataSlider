@@ -1,5 +1,13 @@
 export const CSSNamespace: string = 'wbn_ds_';
 
+export interface Stylable {
+    width: number | Function | 'auto',
+    height: number | Function | 'auto',
+    borderRadius: number | Function | 'auto',
+    style: string | Function | undefined,
+    color: string | Function | undefined
+}
+
 export interface Label {
     text: string | Function | undefined,
     style: string | Function | undefined
@@ -12,50 +20,43 @@ export interface Range {
     decimals: number
 }
 
-export interface Handle {
+export interface Handle extends Stylable {
     show: boolean,
-    width: number | Function | 'auto',
-    height: number | Function | 'auto',
-    borderRadius: number | Function | 'auto',
-    style: string | undefined,
-    label: Label
+    hoverColor: string | Function | undefined
 }
 
 export interface Ribbon {
     show: boolean,
-    notchSteps: boolean
+    color: string | Function | undefined,
+    hoverColor: string | Function | undefined
 }
 
-export interface Tick {
+export interface Tick extends Stylable {
     value: number,
     label: Label,
-    width: number | Function | 'auto',
-    height: number | Function | 'auto',
-    borderRadius: number | Function | 'auto',
-    style: string | Function | undefined,
-    position: 'auto' | 'bottom' | 'top' | undefined
+    position: 'auto' | 'bottom' | 'top' | undefined,
+    hoverColor: string | Function | undefined,
+    activeColor: string | Function | undefined
 }
 
-export interface Ticks {
+export interface Ticks extends Stylable {
     data: Tick[] | Function | null,
     responsive: true,
     labelsClickable: boolean,
-    width: number | Function | 'auto',
-    height: number | Function | 'auto',
-    borderRadius: number | Function | 'auto',
-    style: string | Function | undefined,
     position: 'auto' | 'bottom' | 'top' | 'center',
     snap: boolean,
+    hoverColor: string | Function | undefined
+    activeColor: string | Function | undefined
     onTick: Function
 }
 
-export interface Tooltip {
+export interface Tooltip extends Stylable {
    show: boolean,
    position: 'bottom' | 'top' | 'auto',
    label: Label,
    ticks: {
         show: boolean,
-        label: Label     
+        label: Label
    }
 }
 
@@ -67,6 +68,8 @@ export interface DataBinding {
 
 export interface Options {
     height: number,
+    backgroundColor:string | Function | undefined,
+    hoverColor:string | Function | undefined,
     className: string,
     responsive: boolean,
     ribbon: Ribbon,
@@ -78,6 +81,7 @@ export interface Options {
     dataBinding: DataBinding,
     onReady: Function,
     onUpdate: Function,
+    onDrag: Function,
     onDragStart: Function,
     onDragEnd: Function
 }

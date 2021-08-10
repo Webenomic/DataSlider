@@ -4,6 +4,7 @@ const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 
 export class SliderUI {
     
+    parent: HTMLElement;
     progressElem: HTMLInputElement;
     tooltip: HTMLElement;
     container: HTMLElement;
@@ -12,12 +13,13 @@ export class SliderUI {
     slider: any;
     steps: number[];
     ticks: Element[];
+    tickOn: number | null;
     progressDrag: boolean;
 
-    constructor(container: any, config: Options, slider: any) {
+    constructor(parent: any, config: Options, slider: any) {
         this.slider = slider;
         this.config = config;
-        this.container = container;
+        this.parent = parent;
         
         this._createElements()
             ._createSteps()
@@ -49,7 +51,7 @@ export class SliderUI {
             defaultValue: config.defaultValue
         }
     }
-    
+
     _destroy() {
         this.progressElem.remove();
         this.handle.remove();
@@ -57,10 +59,12 @@ export class SliderUI {
         this.steps = [];
         
     }
-    
-    _createElements() {
 
+    _createElements() {
+        this.container = __wbn$().create('div',true).elem;
+        this.parent.appendChild(this.container);
         this.container.classList.add(CSSNamespace + 'container');
+
         const _progressElem = __wbn$().create('progress', true)
             .setClass(`${CSSNamespace}slider`)
             .setAttr('value', this.config.defaultValue.toString())
@@ -93,6 +97,7 @@ export class SliderUI {
 
     _assignAttributes() {
         const ui = this.UI();
+        const config = this.config;
         
         __wbn$(this.progressElem)
             .setStyle({ 'height': ui.height })
@@ -100,9 +105,26 @@ export class SliderUI {
             .setAttr('max', '100')
             .setAttr('wbn-min', ui.min.toString())
             .setAttr('wbn-max', ui.max.toString());
-
-        const elemHeight    = this.config.height;
-        const handleConfig  = this.config.handle;
+        
+        var cssVars = {
+          '--background-color':[this.progressElem,config.backgroundColor],
+          '--ribbon-color':[this.progressElem,config.ribbon.color || config.handle.color],
+          '--handle-color':[this.handle,config.handle.color],
+          '--hover-ribbon-color':[this.container,config.ribbon.hoverColor || config.hoverColor || config.ribbon.color || null],
+          '--hover-handle-color':[this.container,config.handle.hoverColor || config.hoverColor || config.ribbon.hoverColor || config.handle.color || null],
+        };
+        
+        
+        for (const [key, [ele,value]] of Object.entries(cssVars)) {
+            var thisValue = value;
+            if (typeof thisValue === 'function') {
+                thisValue = thisValue(this.slider);
+            }
+            if (value && ele) ele['style'].setProperty(key,`${thisValue}`);
+        }
+        
+        const elemHeight    = config.height;
+        const handleConfig  = config.handle;
         
         const handleDimension = (dimension) => {
             return (handleConfig[dimension] == 'auto' ? elemHeight * 2 : handleConfig[dimension]);
@@ -116,11 +138,10 @@ export class SliderUI {
                 'top': this.progressElem.offsetTop - (handleDimension('height') / 2) + (elemHeight / 2)
             });
 
-        (this.config.handle.show !== true) ? __wbn$(this.handle).hide() : __wbn$(this.handle).show();
-        (this.config.ribbon.show !== true) ? this.progressElem.classList.add('hidden_ribbon') : this.progressElem.classList.remove('hidden_ribbon');
+        (config.handle.show !== true) ? __wbn$(this.handle).hide() : __wbn$(this.handle).show();
+        (config.ribbon.show !== true) ? this.progressElem.classList.add('hidden_ribbon') : this.progressElem.classList.remove('hidden_ribbon');
         
         return this;
-
     }
 
     _round = (number, decimalPlaces) => Number(Math.round(Number(number + "e" + decimalPlaces)) + "e" + decimalPlaces * -1);
@@ -165,12 +186,14 @@ export class SliderUI {
             me.config.onDragStart(me);
             me.progressDrag = true;
             me._updateProgress(e);
+            me.config.onDrag(me.slider);
         }).on(['mousemove', 'touchmove'], (e) => {
-            me._updateProgress(e)
+            me._updateProgress(e);
+            me.config.onDrag(me.slider);
         },{passive:false});
         
         __wbn$(document).on(['mouseup','touchend'], (e) => { if(me.progressDrag) { me.config.onDragEnd(me.slider); } me.progressDrag = false; });
-        document.addEventListener('mousemove', (e) => me._updateProgress(e));
+        document.addEventListener('mousemove', (e) => { me._updateProgress(e);me.config.onDrag(me.slider); });
 
         document.querySelectorAll('input[wbn-bind]').forEach((ele: any) => {
             var eleBindVarName = ele.getAttribute('wbn-bind');
@@ -183,10 +206,14 @@ export class SliderUI {
             });
         });
 
-        window.onresize = () => { this._refreshUI(); }
+        window.addEventListener('resize', (e) => { me._refreshUI(); });
         return this;
     }
-
+    
+    _valOrFunc(item, val, defaultVal) {
+        return item ? (typeof item === 'function' ? item.apply(null, val) : item) : defaultVal;
+    }
+    
     _createTicks() {
         const ticks = this.slider.config.ticks;
         var tickData = ticks.data;
@@ -201,33 +228,36 @@ export class SliderUI {
         var ticksAndSteps: any[] = tickData.map((tick, i) => { return tick.value }).sort();
         
         const ui = this.UI();
+
         ticksAndSteps.forEach((tick, i) => {
             
             const tickValue = tickData[i]?.value || tick;
             
             if (tickValue < ui.min || tickValue > ui.max) return;
+
             
-            const tickLabel = tickData[i]?.label ? (typeof tickData[i]?.label === 'function' ? tickData[i]?.label(tickValue) : tickData[i]?.label) : tickData[i]?.value || '';
+            let tickLabel = this._valOrFunc(tickData[i]?.label?.text,[tickData[i]?.value,i],tickData[i]?.value); 
+            let tickStyle = {
+                ...this._valOrFunc(tickData[i]?.label?.style,[tickData[i]?.value,i],{}),
+                ...this._valOrFunc(ticks.style,[tickData[i]?.value,i],{})
+            };
 
             let tickPosition = tickData[i]?.position || ticks.position;
-            let tickStyle = tickData[i].style || ticks.style;
 
             const containerRect = this.container.getBoundingClientRect();
             
             if (tickPosition == 'auto') {
-                tickPosition = tickStyle == 'scale' ? ((containerRect.bottom + 30 > window.innerHeight) ? 'top' : 'bottom') : 'center';
+                tickPosition = ((containerRect.bottom + 30 > window.innerHeight) ? 'top' : 'bottom');
             }
             
-            const tickClass = `${tickStyle} ${tickPosition}`;
-
             var tickEle = __wbn$().create('div', true)
-                .setStyle({ 'position': 'absolute' })
-                .setClass(`${CSSNamespace}tick_${tickClass}`)
+                .setStyle(tickStyle)
+                .setClass(`${CSSNamespace}tick`)
                 .setAttr('wbn-value', tickValue)
                 .html(tickLabel)
                 .elem;
 
-            me.container.parentNode?.insertBefore(tickEle, me.container.nextSibling);
+            me.container.appendChild(tickEle);
 
             let tickX = me._positionTick(tickEle, tickValue, tickData[i],i);
             me.ticks.push(tickEle);
@@ -288,7 +318,8 @@ export class SliderUI {
             tickEle.addEventListener('click', _tickClick);
             tickEle._eventHandler = _tickClick;
         }
-       
+        
+        
         return tickX;
     }
 
@@ -312,32 +343,43 @@ export class SliderUI {
         const _tooltip = __wbn$().create('div',true)
                                  .setClass(`${CSSNamespace}tooltip ${position}`)
                                  .elem;
-                                 
+        
+
+                 
         this.container.appendChild(_tooltip);
         
-        this.container.addEventListener('mousemove',(e: any) => {
-            this._showTooltip(_tooltip,position,e.clientX);
-        });
-        
-        if (tooltipConfig.ticks.show === true) {
-            this.ticks.forEach((tick,i) => {
-               tick.addEventListener('mousemove',(e: any) => {
-                    this._showTooltip(_tooltip,position,e.clientX,true,i);
-               });
+        this.tickOn = null;
+        if (this.config.tooltip.ticks.show === true) {
+            const tooltipConfig = this.config.tooltip.ticks;
+            this.ticks.forEach((tickEle,i) => {
+                __wbn$(tickEle).on('mouseover',(e) => { 
+                    this.tickOn = i;
+                    this._showTooltip(_tooltip,position,e.clientX || e.touches[0].clientX,this.tickOn);
+                }).on('mouseout',() => { 
+                    this.tickOn = null; 
+                });
+            
             });
         }
- 
-        this.container.addEventListener('mouseout',(e) => {
-            _tooltip.style.display = 'none'; 
+        
+        [this.container,document].forEach((elem) => {
+            __wbn$(elem).on(['mouseover','mousemove','touchmove','touchstart'],(e: any) => {
+                if (this.progressDrag || e.currentTarget == this.container) this._showTooltip(_tooltip,position,e.clientX || e.touches[0].clientX,this.tickOn);
+            }).on(['touchend','mouseup','mouseout'],() => {
+                _tooltip.style.display = 'none'; 
+            });
         });
+        
+        
+        
         
         this.tooltip = _tooltip;
         
         return this;
         
     }
-   
-    _showTooltip(_tooltip: HTMLElement,position: string,tooltipLeft: number,isTick?: boolean | false,tickIndex?: number | null) {
+
+    _showTooltip(_tooltip: HTMLElement,position: string,tooltipLeft: number,tickIndex?: number | null) {
         const tooltipConfig = this.slider.config.tooltip;
         const ui = this.UI();
         
@@ -352,9 +394,7 @@ export class SliderUI {
         }
              
         var _tooltipText = wbnVal.toString();
-        var _tooltipStyle = '';
-        
-        var labelConfig = isTick ? tooltipConfig.ticks.label : tooltipConfig.label;
+        var labelConfig = tickIndex !== null ? tooltipConfig.ticks.label : tooltipConfig.label;
         
         if (labelConfig) {
             if (typeof labelConfig.text === 'function') {
@@ -362,22 +402,20 @@ export class SliderUI {
             } else {
                 _tooltipText = labelConfig.text;
             }
-            if (labelConfig.style) {
-                 if (typeof labelConfig.style === 'function') {
-                    _tooltipStyle = labelConfig.style(wbnVal,tickIndex);
-                 } else {
-                    _tooltipStyle = labelConfig.style;
-                 }
-                 
-                _tooltip.setAttribute("style", _tooltipStyle);
-                
-            }
         }
+        
+        const _tooltipStyle = {
+            ...this._valOrFunc(labelConfig.style,[wbnVal,tickIndex],{}),
+            ...this._valOrFunc(tooltipConfig.style,[wbnVal,tickIndex],{})
+        };
+        
+        __wbn$(_tooltip).setStyle(_tooltipStyle);
         
         _tooltip.innerHTML = _tooltipText;
         _tooltip.style.display = 'block';
+        
         const _tooltipLeft = (wbnVal - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft - (_tooltip.clientWidth / 2);
-        const _tooltipTop = (position == 'bottom') ? this.container.clientHeight + _tooltip.clientHeight : this.container.offsetTop - _tooltip.clientHeight;
+        const _tooltipTop = (position == 'bottom') ? this.container.offsetTop + this.container.getBoundingClientRect().height + 2 : this.container.offsetTop - _tooltip.clientHeight;
         
         Object.assign(_tooltip.style,{
             left: _tooltipLeft,
@@ -387,7 +425,6 @@ export class SliderUI {
 
         
     }
-   
 
     _updateHandle(val) {
         const ui = this.UI();
@@ -400,7 +437,9 @@ export class SliderUI {
 
     _refreshUI() {
         const tickData = this.slider.config.ticks.data;
-        const progressValue = this.progressElem.value;
+        const progressElem = this.progressElem;
+        const progressValue = progressElem.value;
+        this.container.style.width = (this.parent.getBoundingClientRect().width - (this.ticks.length > 0 ? this.ticks[0].getBoundingClientRect().width / 2 : 0)).toString();
         this.ticks.forEach((tick, i) => {
             this._positionTick(tick, tickData[i] ? tickData[i].value : tick, tickData[i], i);
         });

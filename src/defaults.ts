@@ -16,8 +16,17 @@ export class Defaults {
             return value.toString().split(".")[1].length || 0; 
         }
         
+        const emptyStyle = {
+            height: null,
+            width: null,
+            color: null,
+            borderRadius: null
+        };
+        
         Object.assign(config, {
             height: config.height || 10,
+            backgroundColor: config.backgroundColor || null,
+            hoverColor: config.hoverColor || null,
             className: config.className || CSSNamespace + 'slider',
             responsive: config.responsive !== undefined ? config.responsive : true,
             defaultValue: config.defaultValue || window[container.getAttribute('wbn-bind') || ''] || 0,
@@ -31,11 +40,15 @@ export class Defaults {
                 show: config.handle?.show != undefined ? config.handle?.show : true,
                 width: config.handle?.width || 'auto',
                 height: config.handle?.height || 'auto',
-                borderRadius: config.handle?.borderRadius || 'auto'
+                borderRadius: config.handle?.borderRadius || 'auto',
+                color: config.handle?.color || config.ribbon?.color || null,
+                style: config.handle?.style || null,
+                hoverColor: config.handle?.hoverColor || config.hoverColor || config.handle?.color || null,
             },
             ribbon: {
                 show: config.ribbon?.show != undefined ? config.ribbon?.show : true,
-                notchSteps: config.ribbon?.notchSteps != undefined ? config.ribbon?.notchSteps : true,
+                color: config.ribbon?.color || null,
+                hoverColor: config.ribbon?.hoverColor || config.hoverColor || config.ribbon?.color || null,
             },
             tooltip: {
                 show: config.tooltip?.show != undefined ? config.tooltip?.show : true,
@@ -50,11 +63,12 @@ export class Defaults {
                         text:config.tooltip?.ticks?.label?.text || config.tooltip?.label?.text || null,
                         style:config.tooltip?.ticks?.label?.style || config.tooltip?.label?.style || null,
                     }
-                }
+                },
+                style: config.tooltip?.style || null
             },
             ticks: {
                 data:config.ticks?.data || [],
-                style:config.ticks?.style || 'scale',
+                style:config.ticks?.style || null,
                 snap: config.ticks?.snap !== undefined ? config.ticks?.snap : true,
                 labelsClickable:config.ticks?.labelsClickable !== undefined ? config.ticks.labelsClickable : true,
                 position:config.ticks?.position || 'auto',
@@ -67,6 +81,7 @@ export class Defaults {
             },
             onReady: config.onReady || blankCallback,
             onUpdate: config.onUpdate || blankCallback,
+            onDrag: config.onDrag || blankCallback,
             onDragStart: config.onDragStart || blankCallback,
             onDragEnd: config.onDragEnd || blankCallback,
         });

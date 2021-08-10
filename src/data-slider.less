@@ -9,38 +9,45 @@
       cursor: pointer;
       min-width:100px;
       touch-action:none;
+
     }
     
-    &slider {
+    &slider {        
+        --background-color:@dark;
+        --ribbon-color: @mango;
+        --handle-color: @mango;
+        
         -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
         width: inherit;
-        cursor:pointer;
         border-radius:4px;
         position: relative;
-        background-color: #474545;
+        background: var(--background-color);
         user-select: none;
         -webkit-user-select: none;
         min-width: 100px;
         width: 100%;
         border:none;
-
+        cursor:pointer;
+        
+        &:active,&:focus {
+            cursor:ew-resize;
+        }
+        
+        
         &::-webkit-progress-bar {
-            cursor:pointer;
-            background-color: #474545;
+            background: var(--background-color);
             border-radius: 4px;
         }
     
         &::-webkit-progress-value {
-          cursor:pointer;
-          background: @mango;
+          background: var( --ribbon-color);
           border-radius: 4px;
         }
-        
+
         &::-moz-progress-bar {
-          cursor:pointer;
-          background: @mango;
+          background: var( --ribbon-color);
           border-radius: 4px;
         }
         
@@ -51,6 +58,9 @@
         &.hidden_ribbon::-moz-progress-bar {
             opacity:0;   
         }
+        
+        
+
     }
     
     &loading::after {
@@ -75,13 +85,9 @@
         cursor:pointer;
         position: absolute;
         top:0px;
-        background: @mango;
+        background: var(--handle-color);
         user-select: none;
         -webkit-user-select: none;
-        
-        &:hover,&:focus {
-            background: rgb(188, 128, 14);
-        } 
     }
     
     &tooltip {
@@ -95,48 +101,50 @@
         border-radius:2px;
         z-Index:3040;
     }
-    
+
     &tick {
-        &_scale {
-            user-select: none;
-            -webkit-user-select: none; 
-            width: auto;
+        position: absolute;
+        user-select: none;
+        -webkit-user-select: none; 
+        color: #fff;
+        background: #474747;
+        border-radius: 16px;
+        width: auto;
+        height: 16px;
+        display:flex;
+        justify-content: center;
+        align-items:center;
+
+        &.wbn_selected {
+            font-weight:bold;
+            background:@mango;
+        }
+
+        &.clickable {
+            cursor:pointer;
+        }
+
+    }
+
+    &container {
+        
+        --hover-ribbon-color: @mango;
+        --hover-handle-color: @mango;
+        
+        &:hover,&:active,&:focus {
+            > @{slider-namespace-prefix}slider::-webkit-progress-value {
+                background: var( --hover-ribbon-color);
+            } 
             
-            &.clickable {
-                cursor:pointer;
-            }
+            > @{slider-namespace-prefix}slider::-moz-progress-bar {
+                background: var( --hover-ribbon-color); 
+            } 
             
-            &:hover {
-                
-            }
-            
-            &.wbn_selected {
-                font-weight:bold;
+            > @{slider-namespace-prefix}handle {
+                background: var( --hover-handle-color);    
             }
         }
-        
-        &_bubble {
-            user-select: none;
-            -webkit-user-select: none; 
-            color: #fff;
-            background: #474747;
-            border-radius: 16px;
-            width: auto;
-            height: 16px;
-            padding: 3px 5px;
-            
-            &.wbn_selected {
-                font-weight:bold;
-                background:@mango;
-            }
-            
-            &.clickable {
-                cursor:pointer;
-            }
-            
-        }
-        
-        
+      
     }
     
     @keyframes move {
