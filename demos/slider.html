@@ -25,6 +25,9 @@ Handle Height: <input type="range" onInput="slider.config.handle.height = this.v
 Handle Width: <input type="range" onInput="slider.config.handle.width = this.value;slider.ui.update();" min="10" max="80" step="1"><br>
 Handle Radius: <input type="range" onInput="slider.config.handle.borderRadius = this.value;slider.ui.update();" min="0" max="80" step="1"><br>
 
+Tick Label Position: <input type="range" onInput="slider.config.ticks.labels.position = Number(this.value);slider.ui.update();" min="-50" max="50" step="1"><br>
+Tooltip Position: <input type="range" onInput="slider.config.tooltips.position = Number(this.value);slider.ui.update();" min="-50" max="50" step="1"><br>
+
 Min: <input type="range" onInput="updateMin(Number(this.value))" min="0" max="2" step="0.05"><br>
 Max: <input type="range" onInput="updateMax(Number(this.value))" value="2" min="2" max="10" step="1"><br>
 
@@ -34,10 +37,7 @@ Max: <input type="range" onInput="updateMax(Number(this.value))" value="2" min="
 
 <script>
 
-
 foo=1;
-
-
 
 var t1 = (val) => {return Number(val).toFixed(2) }; 
 var t2 = (val) => {return val+'***'}; 
@@ -45,6 +45,7 @@ var t2 = (val) => {return val+'***'};
 var options = (boundVar) => { 
 	return {
 		height:5,
+		borderRadius:10,
 		defaultValue:foo,
 		color:'#00628c',
 		hoverColor:'#c0c0c0',
@@ -53,7 +54,7 @@ var options = (boundVar) => {
 		    min:0.25,
 		    max:2,
 		    decimals:2,
-		    step:0.05
+		    step:0.125
 		},
 		ribbon: {
 			show:true,
@@ -61,60 +62,74 @@ var options = (boundVar) => {
 			
 		},
 		ticks: {
-		    data:[0.25,0.50,0.75,1,1.25,1.5,2].map((tick,i) => {
-		           return { 
-		               value: tick, 
-		               label: {
-		            	 text: (val) => { return val + 'x'; },
-		            	 style: (val) => { 
-		            		 return { 
-		            			 fontSize : 12+2*val+'px',padding:'10px' 
-	            			 } 
-	            		 }
-		               }
-
-		
-		           }
-		    }),
-            style: (val,i) => {
-                console.log(val + ':' + i);
-            	return {
-            	    background:'#00628c',
-            	    opacity:0.5,
-            	    color:'yellow',
-            	    height:i*5,
-            	    borderRadius:0
-                };
-            },
-		    snap:false,
-		    labelsClickable: true,
-		    position:'top'
+			marks: [
+				
+				{
+                    range:{
+                        step:0.25
+                    },
+                    height:10,
+                    width:1,
+                    position:4,
+                    color:'blue',
+                    style: {
+                        
+                    } 
+                }
+			],
+			
+			labels: {
+			    data:[0.25,0.50,0.75,1,1.25,1.5,2].map((tick,i) => {
+			           return { 
+			               value: tick, 
+			               label: {
+			            	 text: (val,i) => { return val + 'x'; },
+			            	 style: (val) => { 
+			            		 return { 
+			            			 fontSize : 12+2*val+'px',
+			            			 color:'#000'
+		            			 } 
+		            		 }
+			               }
+			           }
+			    }),
+	            style: (val,i) => {
+	            	return {
+	            	    
+	                };
+	            },
+	            hoverStyle: {
+	            	color:'#990000'
+	            },
+	            selectedStyle: {
+	            	color:'#00628c'
+	            },
+			    snap:false,
+			    labelsClickable: true,
+			    position:15
+			}
 		},
-		tooltip: {
+		tooltips: {
 			show:true,
 			label: {
 				text:(val) => { return val + 'x'; },
 				style:(val) => {
 					return {
-					   borderRadius:'10px',
-					   backgroundColor:'#e4a114',
-					   fontSize : 12+2*val+'px',
-					   padding:4,
-					   marginTop:20
+					   
 					}
 				}
-				
 			},
-			position:'bottom',
 			ticks: {
                show:true,
                label:{
                    text:(val) => { return 'VAL:'+val}
-               }
+               },
+               position:15
 			},
 			style: {
 				fontWeight:'bold'
-			}
+			},
+			position:-20
 		},
 		handle: {
 		    show:true,

@@ -38,9 +38,9 @@ export class Defaults {
             },
             handle: {
                 show: config.handle?.show != undefined ? config.handle?.show : true,
-                width: config.handle?.width || 'auto',
-                height: config.handle?.height || 'auto',
-                borderRadius: config.handle?.borderRadius || 'auto',
+                width: config.handle?.width || null,
+                height: config.handle?.height || null,
+                borderRadius: config.handle?.borderRadius || null,
                 color: config.handle?.color || config.ribbon?.color || null,
                 style: config.handle?.style || null,
                 hoverColor: config.handle?.hoverColor || config.hoverColor || config.handle?.color || null,
@@ -50,33 +50,38 @@ export class Defaults {
                 color: config.ribbon?.color || null,
                 hoverColor: config.ribbon?.hoverColor || config.hoverColor || config.ribbon?.color || null,
             },
-            tooltip: {
-                show: config.tooltip?.show != undefined ? config.tooltip?.show : true,
-                position:config.tooltip?.position || 'auto',
+            tooltips: {
+                show: config.tooltips?.show != undefined ? config.tooltips?.show : true,
+                position:config.tooltips?.position,
                 label: {
-                    text:config.tooltip?.label?.text || null,
-                    style:config.tooltip?.label?.style || null
+                    text:config.tooltips?.label?.text || null,
+                    style:config.tooltips?.label?.style || null
                 },
                 ticks: {
-                    show:config.tooltip?.ticks?.show || config.tooltip?.show || true,
+                    show:config.tooltips?.ticks?.show || config.tooltips?.show || true,
                     label: {
-                        text:config.tooltip?.ticks?.label?.text || config.tooltip?.label?.text || null,
-                        style:config.tooltip?.ticks?.label?.style || config.tooltip?.label?.style || null,
+                        text:config.tooltips?.ticks?.label?.text || config.tooltips?.label?.text || null,
+                        style:config.tooltips?.ticks?.label?.style || config.tooltips?.label?.style || null,
                     }
                 },
-                style: config.tooltip?.style || null
+                style: config.tooltips?.style || null
             },
             ticks: {
-                data:config.ticks?.data || [],
-                style:config.ticks?.style || null,
-                snap: config.ticks?.snap !== undefined ? config.ticks?.snap : true,
-                labelsClickable:config.ticks?.labelsClickable !== undefined ? config.ticks.labelsClickable : true,
-                position:config.ticks?.position || 'auto',
-                onTick: config.ticks?.onTick || blankCallback
+                marks: config.ticks?.marks || [],
+                labels: {
+                    data:config.ticks?.labels?.data || [],
+                    style:config.ticks?.labels?.style || null,
+                    hoverStyle:config.ticks?.labels?.hoverStyle || null,
+                    selectedStyle:config.ticks?.labels?.selectedStyle || null,
+                    snap: config.ticks?.labels?.snap !== undefined ? config.ticks?.labels?.snap : true,
+                    labelsClickable:config.ticks?.labels?.labelsClickable !== undefined ? config.ticks.labels?.labelsClickable : true,
+                    position:config.ticks?.labels?.position,
+                    onTick: config.ticks?.labels?.onTick || blankCallback
+                }
             },
             dataBinding: {
                 scope: config.dataBinding?.scope || window,
-                property: config.dataBinding?.property || undefined,
+                property: config.dataBinding?.property || null,
                 transform: config.dataBinding?.transform || window[container.getAttribute('wbn-bind-transform') || ''] || null,    
             },
             onReady: config.onReady || blankCallback,

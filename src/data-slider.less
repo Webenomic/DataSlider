@@ -2,14 +2,21 @@
 
 @{slider-namespace-prefix}  {
     
+    
+    &select_disabled {
+        -webkit-user-select: none;
+        -khtml-user-select: none;
+        -moz-user-select: -moz-none;
+        -o-user-select: none;
+        user-select: none;
+        cursor:pointer;
+    }
+    
     &container {
-      -webkit-appearance: none;
-      -moz-appearance: none;
       height:auto;
       cursor: pointer;
       min-width:100px;
       touch-action:none;
-
     }
     
     &slider {        
@@ -21,11 +28,8 @@
         -moz-appearance: none;
         appearance: none;
         width: inherit;
-        border-radius:4px;
         position: relative;
         background: var(--background-color);
-        user-select: none;
-        -webkit-user-select: none;
         min-width: 100px;
         width: 100%;
         border:none;
@@ -38,17 +42,14 @@
         
         &::-webkit-progress-bar {
             background: var(--background-color);
-            border-radius: 4px;
         }
     
         &::-webkit-progress-value {
           background: var( --ribbon-color);
-          border-radius: 4px;
         }
 
         &::-moz-progress-bar {
           background: var( --ribbon-color);
-          border-radius: 4px;
         }
         
         &.hidden_ribbon::-webkit-progress-value {
@@ -58,9 +59,6 @@
         &.hidden_ribbon::-moz-progress-bar {
             opacity:0;   
         }
-        
-        
-
     }
     
     &loading::after {
@@ -86,12 +84,13 @@
         position: absolute;
         top:0px;
         background: var(--handle-color);
-        user-select: none;
-        -webkit-user-select: none;
+        z-Index:3030;
     }
     
     &tooltip {
-        display:none;
+        display:flex;
+        justify-content: center;
+        align-items:center;
         position:absolute;
         background:@dark;
         text-align: center;
@@ -102,28 +101,30 @@
         z-Index:3040;
     }
 
-    &tick {
-        position: absolute;
-        user-select: none;
-        -webkit-user-select: none; 
-        color: #fff;
-        background: #474747;
-        border-radius: 16px;
+    &tick_label {
+        position: absolute; 
+        color: @dark;
         width: auto;
-        height: 16px;
         display:flex;
         justify-content: center;
         align-items:center;
 
         &.wbn_selected {
             font-weight:bold;
-            background:@mango;
         }
 
         &.clickable {
             cursor:pointer;
         }
 
+    }
+    
+    &tick_mark {
+        position: absolute; 
+        background-color: @dark;
+        height:10px;
+        width:1px;
+        z-Index:3020;
     }
 
     &container {

@@ -1,16 +1,16 @@
 export const CSSNamespace: string = 'wbn_ds_';
 
 export interface Stylable {
-    width: number | Function | 'auto',
-    height: number | Function | 'auto',
-    borderRadius: number | Function | 'auto',
-    style: string | Function | undefined,
+    width: number | Function | undefined,
+    height: number | Function | undefined,
+    borderRadius: number | Function | undefined,
+    style: object | Function | undefined,
     color: string | Function | undefined
 }
 
 export interface Label {
     text: string | Function | undefined,
-    style: string | Function | undefined
+    style: object | Function | undefined
 }
 
 export interface Range {
@@ -31,28 +31,39 @@ export interface Ribbon {
     hoverColor: string | Function | undefined
 }
 
-export interface Tick extends Stylable {
+export interface TickLabel extends Stylable {
     value: number,
     label: Label,
-    position: 'auto' | 'bottom' | 'top' | undefined,
-    hoverColor: string | Function | undefined,
-    activeColor: string | Function | undefined
+    position: number,
+    hoverStyle: object | Function | undefined,
+    activeStyle: object | Function | undefined,
 }
 
-export interface Ticks extends Stylable {
-    data: Tick[] | Function | null,
+export interface TickLabels extends Stylable {
+    data: TickLabel[] | Function | null,
     responsive: true,
     labelsClickable: boolean,
-    position: 'auto' | 'bottom' | 'top' | 'center',
+    position: number,
     snap: boolean,
-    hoverColor: string | Function | undefined
-    activeColor: string | Function | undefined
+    style: object | Function | undefined,
+    hoverStyle: object | Function | undefined
+    selectedStyle: object | Function | undefined,
     onTick: Function
 }
 
-export interface Tooltip extends Stylable {
+export interface TickMark extends Stylable {
+    range: Range,
+    position: number
+}
+
+export interface Ticks {
+    labels: TickLabels,
+    marks: TickMark[]
+}
+
+export interface Tooltips extends Stylable {
    show: boolean,
-   position: 'bottom' | 'top' | 'auto',
+   position: number,
    label: Label,
    ticks: {
         show: boolean,
@@ -77,7 +88,7 @@ export interface Options {
     range: Range,
     handle: Handle,
     ticks: Ticks,
-    tooltip: Tooltip,
+    tooltips: Tooltips,
     dataBinding: DataBinding,
     onReady: Function,
     onUpdate: Function,
