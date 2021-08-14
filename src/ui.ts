@@ -1,11 +1,13 @@
-import { Options, CSSNamespace } from './types';
+import { Options, CSSNamespace, Direction } from './types';
 import { WebenomicCore } from './util';
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 
 export class SliderUI {
     
     parent: HTMLElement;
+    direction: Direction;
     progressElem: HTMLInputElement;
+    ribbon: HTMLElement;
     tooltip: HTMLElement;
     container: HTMLElement;
     handle: Element;
@@ -68,16 +70,29 @@ export class SliderUI {
         this.container = __wbn$().create('div',true).elem;
         this.parent.appendChild(this.container);
         this.container.classList.add(CSSNamespace + 'container');
-
+        
+        this.direction = this.config.direction;
+        const directionToCSS = {
+            'left':'rtl',
+            'down':'rtl',
+            'right':'ltr',
+            'up':'ltr'
+        }
+        
         const _progressElem = __wbn$().create('progress', true)
             .setClass(`${CSSNamespace}slider`)
             .setAttr('value', this.config.defaultValue.toString())
+            .setStyle({direction:directionToCSS[this.direction]})
             .elem;
         this.container.appendChild(_progressElem);
-
+        
+        const _ribbonElem = __wbn$().create('div',true).setClass(`${CSSNamespace}ribbon`).elem;
+        this.container.appendChild(_ribbonElem);
+        
         const handle = this.config.handle;
         const _handleElem = __wbn$().create('div', true)
-            .setClass(`${CSSNamespace}handle`)
+            .setClass(`${CSSNamespace}handle ${handle.className || ''}`)
+            .setStyle(handle.style || {})
             .elem;
 
         this.container.appendChild(_handleElem);
@@ -85,6 +100,7 @@ export class SliderUI {
         Object.assign(this, {
             container: this.container,
             progressElem: _progressElem,
+            ribbon:_ribbonElem,
             handle: _handleElem
         });
 
@@ -139,9 +155,9 @@ export class SliderUI {
                 'height': handleDimension('height'),
                 'width': handleDimension('width'),
                 'borderRadius': `${handleDimension('borderRadius')}px`,
-                'top': this.progressElem.offsetTop - (handleDimension('height') / 2) + (elemHeight / 2)
+                'top': this.progressElem.offsetTop - (this.handle.getBoundingClientRect().height / 2) + (elemHeight / 2) + config.handle.position
             });
-
+        
         (config.handle.show !== true) ? __wbn$(this.handle).hide() : __wbn$(this.handle).show();
         (config.ribbon.show !== true) ? this.progressElem.classList.add('hidden_ribbon') : this.progressElem.classList.remove('hidden_ribbon');
         
@@ -266,8 +282,10 @@ export class SliderUI {
                     .elem;    
                 this.container.appendChild(markEle);
                 
+                Object.assign(markEle.style,markSet.style);
+                
                 let markPosition = markSet.position;
-                const markTop = this.progressElem.offsetTop + (ui.progressRect.height/2) - (markSet.height/2) + markPosition;
+                const markTop = this.progressElem.offsetTop + (ui.progressRect.height/2) - (markEle.getBoundingClientRect().height/2) + markPosition;
                 markEle.style.top = markTop;
                 
                 this.tickMarks.push(markEle);
@@ -299,7 +317,12 @@ export class SliderUI {
     
     _positionTickMark(markEle: any, markValue: number) {
         const ui = this.UI();
-        var tickMarkX = (markValue - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft;
+        const tickPosX = {
+            'right':(markValue - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft,
+            'left':(ui.max - markValue) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft
+        }
+        
+        var tickMarkX = tickPosX[this.direction];
         var tickMarkLeft = tickMarkX - (markEle.getBoundingClientRect().width / 2);
         markEle.style.left = tickMarkLeft;
     }
@@ -314,9 +337,7 @@ export class SliderUI {
 
         const me = this;
         
-
         var ticksAndSteps: any[] = tickData.map((tick, i) => { return tick.value }).sort();
-        
         const ui = this.UI();
         
         ticksAndSteps.forEach((tick, i) => {
@@ -327,8 +348,10 @@ export class SliderUI {
 
             let tickLabel = this._valOrFunc(tickData[i]?.label?.text,[tickData[i]?.value,i],tickData[i]?.value); 
             
-            let tickStyle, tickHoverStyle, tickSelectedStyle;
-                        
+            let tickClassName, tickStyle, tickHoverStyle, tickSelectedStyle;
+        
+            tickClassName = tickLabels.className || tick.className || ''; 
+        
             let tickStyles = {
                 style: {},
                 hoverStyle: {},
@@ -346,7 +369,7 @@ export class SliderUI {
                         
             var tickEle = __wbn$().create('div', true)
                 .setStyle(tickStyles.style)
-                .setClass(`${CSSNamespace}tick_label`)
+                .setClass(`${CSSNamespace}tick_label ${tickClassName}`)
                 .setAttr('wbn-value', tickValue)
                 .html(tickLabel);
              
@@ -385,7 +408,13 @@ export class SliderUI {
         const ui = this.UI();
         const me = this;
         const tickLabels = this.config.ticks.labels;
-        var tickX = (tickValue - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft;
+        
+        const tickPosX = {
+            'right':(tickValue - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft,
+            'left':(ui.max - tickValue) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft
+        }
+        
+        var tickX = tickPosX[this.direction];
         var tickLeft = tickX - (tickEle.getBoundingClientRect().width / 2);
         tickEle.style.left = tickLeft;
         
@@ -435,7 +464,7 @@ export class SliderUI {
         const tooltipConfig = this.slider.config.tooltips;
         
         if (tooltipConfig.show === false) return this;
-
+        
         const containerRect = this.container.getBoundingClientRect();
         const _tooltip = __wbn$().create('div',true)
                                  .setClass(`${CSSNamespace}tooltip`)
@@ -479,15 +508,19 @@ export class SliderUI {
         
         const _offsetLeft: number = tooltipLeft;
         const _parentOffsetLeft = ui.progressLeft || 0;
+        const _parentOffsetRight = ui.progressRight || 0;
         const _parentWidth: number = ui.progressWidth;
-        const _progValue = Math.round(((_offsetLeft - _parentOffsetLeft) / _parentWidth) * 100).toFixed(2).toString();
+        const _progValue = {
+            'right':Math.round(((_offsetLeft - _parentOffsetLeft) / _parentWidth) * 100),
+            'left':Math.round(((_parentOffsetRight - _offsetLeft) / _parentWidth) * 100),
+        }
         
         var wbnVal;
         
         if (tickVal) {
             wbnVal = tickVal;
         } else {
-            wbnVal = this._progValToWbnVal(_progValue); 
+            wbnVal = this._progValToWbnVal(_progValue[this.direction].toFixed(2).toString()); 
             if (this.slider.ui.steps.length > 0) {
                 wbnVal = this.slider.ui._wbnValToStep(wbnVal);
             }
@@ -497,7 +530,7 @@ export class SliderUI {
         var _tooltipText = wbnVal.toString();
         var labelConfig = tickIndex !== null ? tooltipConfig.ticks.label : tooltipConfig.label;
         
-        if (labelConfig) {
+        if (labelConfig.text) {
             if (typeof labelConfig.text === 'function') {
                 _tooltipText = labelConfig.text(wbnVal,tickIndex);
             } else {
@@ -515,12 +548,16 @@ export class SliderUI {
         _tooltip.innerHTML = _tooltipText;
         _tooltip.style.display = 'block';
         
-        const _tooltipLeft = (wbnVal - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft - (_tooltip.clientWidth / 2);
+        const _tooltipLeft = {
+            'right':(wbnVal - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft - (_tooltip.clientWidth / 2),
+            'left':(ui.max - wbnVal) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft - (_tooltip.clientWidth / 2)
+        };
+        
         const _tooltipPosition = tooltipPosition === null ? -(_tooltip.clientHeight/2) - 4 : tooltipPosition;   
         const _tooltipTop = this.progressElem.offsetTop + (ui.progressRect.height/2) - (_tooltip.clientHeight/2) + _tooltipPosition;
         
         Object.assign(_tooltip.style,{
-            left: _tooltipLeft,
+            left: _tooltipLeft[this.direction],
             top: _tooltipTop
         });
     }
@@ -528,10 +565,27 @@ export class SliderUI {
     _updateHandle(val) {
         const ui = this.UI();
         const handleWidth = this.handle.getBoundingClientRect().width;
-        const handleLeft = this.progressElem.offsetLeft - handleWidth / 2 + this._clamp(val / 100, 0, 1) * ui.progressWidth;
-        //TODO const handleStyle = 
+        const handleLeft = {
+            'right':this.progressElem.offsetLeft - handleWidth / 2 + this._clamp(val / 100, 0, 1) * ui.progressWidth,
+            'left':(this.progressElem.offsetLeft+ui.progressWidth) - handleWidth / 2 - this._clamp(val / 100, 0, 1) * ui.progressWidth 
+        };
+        const ribbonWidth = {
+            'right':handleLeft[this.direction] - this.progressElem.offsetLeft + handleWidth / 2,
+            'left':(this.progressElem.offsetLeft+ui.progressWidth) - handleLeft[this.direction] - handleWidth / 2,
+        }
+        
+        const ribbonLeft = {
+            'right':this.progressElem.offsetLeft,
+            'left':(this.progressElem.offsetLeft+ui.progressWidth)-ribbonWidth['left']
+        }
+        
+        __wbn$(this.ribbon)
+            .setStyle({
+                'width': ribbonWidth[this.direction],
+                'left': ribbonLeft[this.direction] 
+            }); 
         __wbn$(this.handle)
-            .setStyle({ 'left': handleLeft });
+            .setStyle({ 'left': handleLeft[this.direction] });
         return this;
     }
 
@@ -556,7 +610,7 @@ export class SliderUI {
         let lastRect;
         this.tickLabels.forEach((tick, i) => {
             var tickRect = tick.getBoundingClientRect();
-            __wbn$(tick).setStyle({ visibility: (lastRect && tickRect.left <= lastRect.right) ? 'hidden' : 'visible' });
+            __wbn$(tick).setStyle({ visibility: (lastRect && (this.direction == 'right' ? tickRect.left <= lastRect.right : tickRect.right >= lastRect.left)) ? 'hidden' : 'visible' });
             if (__wbn$(tick).getStyle('visibility') != 'hidden') lastRect = tickRect;
         });
         return this;
@@ -603,21 +657,25 @@ export class SliderUI {
 
         if (!this.progressDrag && !tickX && e.touches === undefined) return
         const clientX = e ? e.clientX || e.touches[0].clientX : tickX;
+        
+        const progressVal = {
+            'right':Math.round((clientX - ui.progressLeft) / ui.progressWidth * 100),
+            'left':Math.round((ui.progressRight - clientX) / ui.progressWidth * 100)
+        }
 
-        const progressValue = Math.round((clientX - ui.progressLeft) / ui.progressWidth * 100);
-        var wbnValue = this._progValToWbnVal(progressValue);
-        var newValue;
+        var wbnVal = this._progValToWbnVal(progressVal[this.direction]);
+        var newVal;
 
         const steps = this.steps;
         if (steps.length) {
-            wbnValue = this._wbnValToStep(wbnValue);
-            newValue = this._wbnValToProgVal(wbnValue);
+            wbnVal = this._wbnValToStep(wbnVal);
+            newVal = this._wbnValToProgVal(wbnVal);
         } else {
-            newValue = progressValue;
+            newVal = progressVal;
         }
 
-        this._updateValue(newValue, wbnValue)
-            ._updateHandle(newValue)
+        this._updateValue(newVal, wbnVal)
+            ._updateHandle(newVal)
             ._updateBindings();
         return this;
        

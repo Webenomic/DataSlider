@@ -24,6 +24,8 @@ export class Defaults {
         };
         
         Object.assign(config, {
+            orientation: config.orientation || 'horizontal',
+            direction: config.direction || 'right',
             height: config.height || 10,
             backgroundColor: config.backgroundColor || null,
             hoverColor: config.hoverColor || null,
@@ -44,6 +46,8 @@ export class Defaults {
                 color: config.handle?.color || config.ribbon?.color || null,
                 style: config.handle?.style || null,
                 hoverColor: config.handle?.hoverColor || config.hoverColor || config.handle?.color || null,
+                position: config.handle?.position || 0,
+                className:config.handle?.className || null 
             },
             ribbon: {
                 show: config.ribbon?.show != undefined ? config.ribbon?.show : true,
@@ -76,7 +80,8 @@ export class Defaults {
                     snap: config.ticks?.labels?.snap !== undefined ? config.ticks?.labels?.snap : true,
                     labelsClickable:config.ticks?.labels?.labelsClickable !== undefined ? config.ticks.labels?.labelsClickable : true,
                     position:config.ticks?.labels?.position,
-                    onTick: config.ticks?.labels?.onTick || blankCallback
+                    onTick: config.ticks?.labels?.onTick || blankCallback,
+                    className: config.ticks?.labels?.className || null
                 }
             },
             dataBinding: {

@@ -22,8 +22,9 @@ body,html {
 Slider Height: <input type="range" onInput="slider.config.height = this.value;slider.ui.update();" min="1" max="20" step="1"><br>
 
 Handle Height: <input type="range" onInput="slider.config.handle.height = this.value;slider.ui.update();" min="10" max="80" step="1"><br>
-Handle Width: <input type="range" onInput="slider.config.handle.width = this.value;slider.ui.update();" min="10" max="80" step="1"><br>
+Handle Width: <input type="range" onInput="slider.config.handle.width = this.value;slider.ui.update();" min="1" max="80" step="1"><br>
 Handle Radius: <input type="range" onInput="slider.config.handle.borderRadius = this.value;slider.ui.update();" min="0" max="80" step="1"><br>
+Handle Position: <input type="range" onInput="slider.config.handle.position = Number(this.value);slider.ui.update();" min="-30" max="30" step="1"><br>
 
 Tick Label Position: <input type="range" onInput="slider.config.ticks.labels.position = Number(this.value);slider.ui.update();" min="-50" max="50" step="1"><br>
 Tooltip Position: <input type="range" onInput="slider.config.tooltips.position = Number(this.value);slider.ui.update();" min="-50" max="50" step="1"><br>
@@ -44,7 +45,8 @@ var t2 = (val) => {return val+'***'};
 
 var options = (boundVar) => { 
 	return {
-		height:5,
+		direction:'right',
+		height:10,
 		borderRadius:10,
 		defaultValue:foo,
 		color:'#00628c',
@@ -59,21 +61,22 @@ var options = (boundVar) => {
 		ribbon: {
 			show:true,
 			color:(slider) => { return 'rgb(' + slider.value*200 + ',50,50)'; },
-			
 		},
 		ticks: {
 			marks: [
-				
 				{
                     range:{
-                        step:0.25
+                        step:0.25,
+                        min:0.5,
+                        max:0.75
                     },
-                    height:10,
-                    width:1,
-                    position:4,
-                    color:'blue',
+                    height:16,
+                    width:16,
+                    borderRadius:16,
+                    position:0,
+                    color:'#990000',
                     style: {
-                        
+                        border:'2px solid #fff'
                     } 
                 }
 			],

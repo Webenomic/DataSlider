@@ -5,12 +5,14 @@ export interface Stylable {
     height: number | Function | undefined,
     borderRadius: number | Function | undefined,
     style: object | Function | undefined,
-    color: string | Function | undefined
+    color: string | Function | undefined,
+    className: string | Function | undefined
 }
 
 export interface Label {
     text: string | Function | undefined,
-    style: object | Function | undefined
+    style: object | Function | undefined,
+    className: string | Function | undefined
 }
 
 export interface Range {
@@ -22,10 +24,11 @@ export interface Range {
 
 export interface Handle extends Stylable {
     show: boolean,
-    hoverColor: string | Function | undefined
+    hoverColor: string | Function | undefined,
+    position: number,
 }
 
-export interface Ribbon {
+export interface Ribbon extends Stylable {
     show: boolean,
     color: string | Function | undefined,
     hoverColor: string | Function | undefined
@@ -77,7 +80,11 @@ export interface DataBinding {
     transform: Function
 }
 
+export type Direction = 'right' | 'left' | 'up' | 'down';
+
 export interface Options {
+    orientation: 'horizontal' | 'vertical',
+    direction: Direction,
     height: number,
     backgroundColor:string | Function | undefined,
     hoverColor:string | Function | undefined,
