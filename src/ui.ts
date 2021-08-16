@@ -1,4 +1,4 @@
-import { Options, CSSNamespace, Direction } from './types';
+import { Options, CSSNamespace, Direction, Orientation } from './types';
 import { WebenomicCore } from './util';
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 
@@ -6,6 +6,8 @@ export class SliderUI {
     
     parent: HTMLElement;
     direction: Direction;
+    orientation: Orientation;
+    vertical: boolean;
     progressElem: HTMLInputElement;
     ribbon: HTMLElement;
     tooltip: HTMLElement;
@@ -41,15 +43,31 @@ export class SliderUI {
         const config = this.config;
         const progressRect = this.progressElem.getBoundingClientRect();
         const progressLeft = progressRect.left;
-        const progressWidth = progressRect.width;
+        const progressTop = progressRect.top;
+        const progressBottom = progressRect.bottom;
+        const progressLength = this.vertical ? progressRect.height : progressRect.width;
+        const progressThickness = this.vertical ? progressRect.width : progressRect.height;
+        const progressOffset = this.vertical ? this.progressElem.offsetTop : this.progressElem.offsetLeft;
+        const positionProperty  = this.vertical ? 'top' : 'left'
+        const positionOffsetProperty = this.vertical ? 'offsetLeft' : 'offsetTop';
+        const thicknessProperty  = this.vertical ? 'width' : 'height'
+        const directionAlias = this.vertical ? (this.direction == 'up' ? 'left' : 'right') : this.direction;
         
         return {
-            height: config.height,
+            height: config.bar.thickness,
             progressDrag: this.progressDrag,
             progressRect: progressRect,
             progressLeft: progressRect.left,
+            progressTop: progressRect.top,
+            progressBottom: progressRect.bottom,
             progressRight: progressRect.right,
-            progressWidth: progressRect.width,
+            progressLength: progressLength,
+            progressThickness:progressThickness,
+            progressOffset: progressOffset,
+            positionProperty: positionProperty,
+            positionOffsetProperty: positionOffsetProperty,
+            thicknessProperty: thicknessProperty,
+            directionAlias: directionAlias,
             min: config.range.min,
             max: config.range.max,
             step: config.range.step,
@@ -69,22 +87,30 @@ export class SliderUI {
     _createElements() {
         this.container = __wbn$().create('div',true).elem;
         this.parent.appendChild(this.container);
-        this.container.classList.add(CSSNamespace + 'container');
+        this.orientation = this.config.orientation;
+        this.vertical = this.orientation === 'vertical';
+        this.container.classList.add(`${CSSNamespace}container`);
+        this.container.classList.add(this.orientation);
         
         this.direction = this.config.direction;
         const directionToCSS = {
             'left':'rtl',
-            'down':'rtl',
+            'down':'ltr',
             'right':'ltr',
-            'up':'ltr'
+            'up':'rtl'
         }
         
         const _progressElem = __wbn$().create('progress', true)
             .setClass(`${CSSNamespace}slider`)
             .setAttr('value', this.config.defaultValue.toString())
-            .setStyle({direction:directionToCSS[this.direction]})
+            .setStyle({
+                direction:directionToCSS[this.direction],
+                width:this.vertical ? this.parent.getBoundingClientRect().height : 'inherit'
+            })
             .elem;
+        if (this.vertical) _progressElem.style.marginLeft = -this.config.bar.thickness/2;
         this.container.appendChild(_progressElem);
+
         
         const _ribbonElem = __wbn$().create('div',true).setClass(`${CSSNamespace}ribbon`).elem;
         this.container.appendChild(_ribbonElem);
@@ -127,11 +153,11 @@ export class SliderUI {
             .setAttr('wbn-max', ui.max.toString());
         
         var cssVars = {
-          '--background-color':[this.progressElem,config.backgroundColor],
+          '--background-color':[this.progressElem,config.bar.backgroundColor],
           '--ribbon-color':[this.progressElem,config.ribbon.color || config.handle.color],
           '--handle-color':[this.handle,config.handle.color],
-          '--hover-ribbon-color':[this.container,config.ribbon.hoverColor || config.hoverColor || config.ribbon.color || null],
-          '--hover-handle-color':[this.container,config.handle.hoverColor || config.hoverColor || config.ribbon.hoverColor || config.handle.color || null],
+          '--hover-ribbon-color':[this.container,config.ribbon.hoverColor || config.ribbon.color || null],
+          '--hover-handle-color':[this.container,config.handle.hoverColor || config.ribbon.hoverColor || config.handle.color || null],
         };
         
         
@@ -143,20 +169,25 @@ export class SliderUI {
             if (value && ele) ele['style'].setProperty(key,`${thisValue}`);
         }
         
-        const elemHeight    = config.height;
+        const elemHeight    = config.bar.thickness;
         const handleConfig  = config.handle;
         
         const handleDimension = (dimension) => {
             return (handleConfig[dimension] === null ? elemHeight * 2 : handleConfig[dimension]);
         }
-
+        
+        const handlePos = this.progressElem[this.vertical ? 'offsetLeft' : 'offsetTop'] - (this.handle.getBoundingClientRect()[this.vertical ? 'width' : 'height'] / 2) + (this.vertical ? 0 : elemHeight / 2) + config.handle.position;
+        
+        var handleStyle = {
+            'height': handleDimension('height'),
+            'width': handleDimension('width'),
+            'borderRadius': `${handleDimension('borderRadius')}px`,
+        }
+        
+        Object.assign(handleStyle,this.vertical ? { 'left':handlePos } : {'top':handlePos});
+        
         __wbn$(this.handle)
-            .setStyle({
-                'height': handleDimension('height'),
-                'width': handleDimension('width'),
-                'borderRadius': `${handleDimension('borderRadius')}px`,
-                'top': this.progressElem.offsetTop - (this.handle.getBoundingClientRect().height / 2) + (elemHeight / 2) + config.handle.position
-            });
+            .setStyle(handleStyle);
         
         (config.handle.show !== true) ? __wbn$(this.handle).hide() : __wbn$(this.handle).show();
         (config.ribbon.show !== true) ? this.progressElem.classList.add('hidden_ribbon') : this.progressElem.classList.remove('hidden_ribbon');
@@ -268,7 +299,6 @@ export class SliderUI {
                 markSteps.push(this._round(newStep, ui.decimals));
                 increment += 1;
             }
-            //if (this.markSteps.indexOf(markMax) < 0) this.markSteps.push(markMax);
             
             markSteps.forEach((markValue) => {
                 var markEle = __wbn$().create('div',true)
@@ -285,30 +315,14 @@ export class SliderUI {
                 Object.assign(markEle.style,markSet.style);
                 
                 let markPosition = markSet.position;
-                const markTop = this.progressElem.offsetTop + (ui.progressRect.height/2) - (markEle.getBoundingClientRect().height/2) + markPosition;
-                markEle.style.top = markTop;
-                
+                const markTop = (this.vertical ? ui.progressLeft : ui.progressTop) + (ui.progressThickness/2) - (markEle.getBoundingClientRect().height/2) + markPosition;
+                markEle.style[this.vertical ? 'left' : 'top'] = markTop;
+                 
                 this.tickMarks.push(markEle);
                 this._positionTickMark(markEle,markValue);
             });
             
             this.markSteps = this.markSteps.concat(markSteps);
-
-           /*
-           range:{
-                        step:0.25
-                    },
-                    height:10,
-                    width:1,
-                    borderRadius:0,
-                    position:10,
-                    style: {
-                        
-                    } */
-                    
-            
-           
-            
         });
         this._refreshUI();
         return this;
@@ -317,14 +331,15 @@ export class SliderUI {
     
     _positionTickMark(markEle: any, markValue: number) {
         const ui = this.UI();
-        const tickPosX = {
-            'right':(markValue - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft,
-            'left':(ui.max - markValue) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft
+        const tickPos = {
+            'right':(markValue - ui.min) * ui.progressLength / (ui.max - ui.min) + ui.progressOffset,
+            'left':(ui.max - markValue) * ui.progressLength / (ui.max - ui.min) + ui.progressOffset
         }
         
-        var tickMarkX = tickPosX[this.direction];
-        var tickMarkLeft = tickMarkX - (markEle.getBoundingClientRect().width / 2);
-        markEle.style.left = tickMarkLeft;
+        var tickMarkPos = tickPos[ui.directionAlias];
+        tickMarkPos = tickMarkPos - (markEle.getBoundingClientRect()[this.vertical ? 'height' : 'width']/2) + (this.vertical ? ui.progressThickness/2 : 0);
+        
+        markEle.style[ui.positionProperty] = tickMarkPos;
     }
     
     _createTickLabels() {
@@ -390,16 +405,31 @@ export class SliderUI {
             me.tickLabels.push(tickEle.elem);
         });
         
-        const heightElement = this.tickLabels.length > 0 ? this.tickLabels[0].getBoundingClientRect().height : this.handle.getBoundingClientRect().height 
-        const containerPadding = (heightElement / 2) - (ui.progressRect.height / 2);
+        const heightProperty = this.orientation == 'horizontal' ? 'height' : 'width';
+        const heightElement = this.tickLabels.length > 0 ? this.tickLabels[0].getBoundingClientRect()[heightProperty] : this.handle.getBoundingClientRect()[heightProperty];
         
-        __wbn$(this.container)
-                .setStyle({
-                    'paddingTop' : containerPadding,
-                    'paddingBottom' : containerPadding,
-                    'paddingLeft':this.tickLabels[0].getBoundingClientRect().width / 2,
-                    'width':ui.progressWidth-this.tickLabels[0].getBoundingClientRect().width / 2
-                });
+        const containerPadding = (heightElement / 2) - (ui.progressThickness / 2);
+
+        const paddingOffset = this.tickLabels[0].getBoundingClientRect()[heightProperty] / 2;
+        const paddingLength = ui.progressLength-this.tickLabels[0].getBoundingClientRect().width / 2;
+        
+        if (this.orientation == 'horizontal') {
+            __wbn$(this.container)
+                    .setStyle({
+                        'paddingTop' : containerPadding,
+                        'paddingBottom' : containerPadding,
+                        'paddingLeft': paddingOffset,
+                        'width': paddingLength
+                    });
+        } else {
+             __wbn$(this.container)
+                    .setStyle({
+                        'paddingLeft' : containerPadding,
+                        'paddingRight' : containerPadding,
+                        'paddingBottom': paddingOffset,
+                        'height': paddingLength
+                    });
+        }
         
         return this;
     }
@@ -409,27 +439,39 @@ export class SliderUI {
         const me = this;
         const tickLabels = this.config.ticks.labels;
         
-        const tickPosX = {
-            'right':(tickValue - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft,
-            'left':(ui.max - tickValue) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft
+        const tickPos = {
+            'right':(tickValue - ui.min) * ui.progressLength / (ui.max - ui.min) + ui.progressOffset,
+            'left':(ui.max - tickValue) * ui.progressLength / (ui.max - ui.min) + ui.progressOffset
         }
         
-        var tickX = tickPosX[this.direction];
-        var tickLeft = tickX - (tickEle.getBoundingClientRect().width / 2);
-        tickEle.style.left = tickLeft;
+        var tickFinalPos = tickPos[ui.directionAlias] - (tickEle.getBoundingClientRect()[this.vertical ? 'height' : 'width'] / 2) + (this.vertical ? ui.progressThickness/2 : 0);
+        tickEle.style[ui.positionProperty] = tickFinalPos;
         
         const handleRect = this.handle.getBoundingClientRect();
         
         const handleTop = this.config.handle.show ? __wbn$(this.handle).elem.offsetTop : this.progressElem.offsetTop;
-        const handleBottom = this.config.handle.show ? handleTop + handleRect.height : this.progressElem.offsetTop + ui.progressRect.height;
+        const handleBottom = this.config.handle.show ? handleTop + handleRect.height : this.progressElem.offsetTop + ui.progressThickness;
         
-        const tickHeight = tickEle.getBoundingClientRect().height;
+        const tickHeight = tickEle.getBoundingClientRect()[this.vertical ? 'width' : 'height'];
         
         let tickPosition = tickLabels.position;
-        tickPosition = tickPosition === null ? this.progressElem.offsetTop + ui.progressRect.height + 4 : tickPosition;        
-        const tickTop = this.progressElem.offsetTop + (ui.progressRect.height/2) - (tickHeight/2) + tickPosition;
-
-        tickEle.style.top = tickTop;
+        var finalTickPos = tickPosition === null ? this.progressElem[ui.positionOffsetProperty] + ui.progressThickness + 4 : tickPosition;        
+        
+        if (this.vertical) {
+            if (tickPosition == 0) {
+                finalTickPos = finalTickPos - (ui.progressThickness)/2 - tickHeight/2;
+            }
+            if (tickPosition < 0) {
+                finalTickPos -= ui.progressThickness + tickHeight;
+            }
+           
+        } else {
+             finalTickPos -= tickHeight/2;
+        }
+        
+        finalTickPos = this.progressElem[ui.positionOffsetProperty] + (ui.progressThickness/2) + finalTickPos;
+        tickEle.style[this.vertical ? 'left' : 'top'] = finalTickPos;
+        
         if (tickLabels.labelsClickable !== false) {
             const selectedEvent = new CustomEvent('selected');
             const deselectedEvent = new CustomEvent('deselected');
@@ -444,13 +486,22 @@ export class SliderUI {
                 e.stopPropagation();
                 e.preventDefault();
             }
-            if (tickEle._eventHandler) tickEle.removeEventListener('click', tickEle._eventHandler);
+            
+            const tickEventListeners = ['click','mousedown'];
+            
+            if (tickEle._eventHandler) {
+                tickEventListeners.forEach((listener) => {
+                     tickEle.removeEventListener(listener, tickEle._eventHandler);
+                });
+            }
             tickEle.classList.add('clickable');
-            tickEle.addEventListener('click', _tickClick);
+            tickEventListeners.forEach((listener) => {
+                tickEle.addEventListener(listener, _tickClick);
+            });
             tickEle._eventHandler = _tickClick;
         }
         
-        return tickX;
+        return tickFinalPos;
     }
     
     _updateTicks(val) {
@@ -474,13 +525,14 @@ export class SliderUI {
         this.container.appendChild(_tooltip);
         
         this.tickOn = null;
+        const posProperty = this.vertical ? 'clientY' : 'clientX';
         if (this.config.tooltips.ticks.show === true) {
             const tooltipConfig = this.config.tooltips.ticks;
             this.tickLabels.forEach((tickEle,i) => {
                 __wbn$(tickEle).on('mouseover',(e) => { 
                     this.tickOn = i;
                     this.tickVal = this.config.ticks.labels.data ? this.config.ticks.labels.data[i].value : null;
-                    this._showTooltip(_tooltip,e.clientX || e.touches[0].clientX,this.tickOn,this.tickVal);
+                    this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
                 }).on('mouseout',() => { 
                     this.tickVal = null;
                     this.tickOn = null; 
@@ -491,7 +543,7 @@ export class SliderUI {
         
         [this.container,document].forEach((elem) => {
             __wbn$(elem).on(['mouseover','mousemove','touchmove','touchstart'],(e: any) => {
-                if (this.progressDrag || e.currentTarget == this.container) this._showTooltip(_tooltip,e.clientX || e.touches[0].clientX,this.tickOn,this.tickVal);
+                if (this.progressDrag || e.currentTarget == this.container) this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
             }).on(['touchend','mouseup','mouseout'],() => {
                 _tooltip.style.display = 'none'; 
             });
@@ -501,18 +553,27 @@ export class SliderUI {
         return this;
     }
 
-    _showTooltip(_tooltip: HTMLElement,tooltipLeft: number,tickIndex?: number | null,tickVal?: string | null) {
+    _showTooltip(_tooltip: HTMLElement,tooltipStart: number,tickIndex?: number | null,tickVal?: string | null) {
         const tooltipConfig = this.slider.config.tooltips;
         let tooltipPosition = tooltipConfig.position;
         const ui = this.UI();
         
-        const _offsetLeft: number = tooltipLeft;
-        const _parentOffsetLeft = ui.progressLeft || 0;
-        const _parentOffsetRight = ui.progressRight || 0;
-        const _parentWidth: number = ui.progressWidth;
+        const _offsetStart: number = tooltipStart;
+        
+        var _parentOffsetStart,_parentOffsetEnd;
+        
+        if (this.vertical) {
+            _parentOffsetStart = ui.progressTop || 0;
+            _parentOffsetEnd = ui.progressBottom || 0;
+        } else {
+            _parentOffsetStart = ui.progressLeft || 0;
+            _parentOffsetEnd = ui.progressRight || 0;
+        }
+        
+        const _parentWidth: number = ui.progressLength;
         const _progValue = {
-            'right':Math.round(((_offsetLeft - _parentOffsetLeft) / _parentWidth) * 100),
-            'left':Math.round(((_parentOffsetRight - _offsetLeft) / _parentWidth) * 100),
+            'right':Math.round(((_offsetStart - _parentOffsetStart) / _parentWidth) * 100),
+            'left':Math.round(((_parentOffsetEnd - _offsetStart) / _parentWidth) * 100),
         }
         
         var wbnVal;
@@ -520,7 +581,7 @@ export class SliderUI {
         if (tickVal) {
             wbnVal = tickVal;
         } else {
-            wbnVal = this._progValToWbnVal(_progValue[this.direction].toFixed(2).toString()); 
+            wbnVal = this._progValToWbnVal(_progValue[ui.directionAlias].toFixed(2).toString()); 
             if (this.slider.ui.steps.length > 0) {
                 wbnVal = this.slider.ui._wbnValToStep(wbnVal);
             }
@@ -549,43 +610,53 @@ export class SliderUI {
         _tooltip.style.display = 'block';
         
         const _tooltipLeft = {
-            'right':(wbnVal - ui.min) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft - (_tooltip.clientWidth / 2),
-            'left':(ui.max - wbnVal) * ui.progressWidth / (ui.max - ui.min) + this.progressElem.offsetLeft - (_tooltip.clientWidth / 2)
+            'right':(wbnVal - ui.min) * ui.progressLength / (ui.max - ui.min) + ui.progressOffset - (_tooltip.clientWidth / 2),
+            'left':(ui.max - wbnVal) * ui.progressLength / (ui.max - ui.min) + ui.progressOffset - (_tooltip.clientWidth / 2)
         };
         
         const _tooltipPosition = tooltipPosition === null ? -(_tooltip.clientHeight/2) - 4 : tooltipPosition;   
-        const _tooltipTop = this.progressElem.offsetTop + (ui.progressRect.height/2) - (_tooltip.clientHeight/2) + _tooltipPosition;
+        const _tooltipTop = this.progressElem.offsetTop + (ui.progressThickness/2) - (_tooltip.clientHeight/2) + _tooltipPosition;
         
         Object.assign(_tooltip.style,{
-            left: _tooltipLeft[this.direction],
+            left: _tooltipLeft[ui.directionAlias],
             top: _tooltipTop
         });
     }
 
     _updateHandle(val) {
         const ui = this.UI();
-        const handleWidth = this.handle.getBoundingClientRect().width;
+        const handleWidth = this.handle.getBoundingClientRect()[this.vertical ? 'height' : 'width'];
         const handleLeft = {
-            'right':this.progressElem.offsetLeft - handleWidth / 2 + this._clamp(val / 100, 0, 1) * ui.progressWidth,
-            'left':(this.progressElem.offsetLeft+ui.progressWidth) - handleWidth / 2 - this._clamp(val / 100, 0, 1) * ui.progressWidth 
+            'right':ui.progressOffset - handleWidth / 2 + this._clamp(val / 100, 0, 1) * ui.progressLength,
+            'left':(ui.progressOffset+ui.progressLength) - handleWidth / 2 - this._clamp(val / 100, 0, 1) * ui.progressLength 
         };
         const ribbonWidth = {
-            'right':handleLeft[this.direction] - this.progressElem.offsetLeft + handleWidth / 2,
-            'left':(this.progressElem.offsetLeft+ui.progressWidth) - handleLeft[this.direction] - handleWidth / 2,
+            'right':handleLeft[ui.directionAlias] - ui.progressOffset + handleWidth / 2,
+            'left':(ui.progressOffset+ui.progressLength) - handleLeft[ui.directionAlias] - handleWidth / 2,
         }
         
         const ribbonLeft = {
-            'right':this.progressElem.offsetLeft,
-            'left':(this.progressElem.offsetLeft+ui.progressWidth)-ribbonWidth['left']
+            'right':ui.progressOffset,
+            'left':(ui.progressOffset+ui.progressLength)-ribbonWidth['left']
         }
         
-        __wbn$(this.ribbon)
-            .setStyle({
-                'width': ribbonWidth[this.direction],
-                'left': ribbonLeft[this.direction] 
-            }); 
-        __wbn$(this.handle)
-            .setStyle({ 'left': handleLeft[this.direction] });
+        if (this.vertical) {
+            __wbn$(this.ribbon)
+                .setStyle({
+                    'height': ribbonWidth[ui.directionAlias],
+                    'top': ribbonLeft[ui.directionAlias] 
+                }); 
+            __wbn$(this.handle)
+                .setStyle({ 'top': handleLeft[ui.directionAlias] + ui.progressThickness/2 });
+        } else {
+            __wbn$(this.ribbon)
+                .setStyle({
+                    'width': ribbonWidth[ui.directionAlias],
+                    'left': ribbonLeft[ui.directionAlias] 
+                }); 
+            __wbn$(this.handle)
+                .setStyle({ 'left': handleLeft[ui.directionAlias] });
+        }
         return this;
     }
 
@@ -608,9 +679,18 @@ export class SliderUI {
         if (this.config.responsive === false) return this;
         const ui = this.UI();
         let lastRect;
+        
+        let outOfBounds = (tickRect) => {
+            
+            if (this.orientation == 'horizontal')
+                return (this.direction == 'right' ? tickRect.left <= lastRect.right : tickRect.right >= lastRect.left)
+            else
+                return (this.direction == 'down' ? tickRect.bottom <= lastRect.top : tickRect.top >= lastRect.bottom)  
+         };
+        
         this.tickLabels.forEach((tick, i) => {
             var tickRect = tick.getBoundingClientRect();
-            __wbn$(tick).setStyle({ visibility: (lastRect && (this.direction == 'right' ? tickRect.left <= lastRect.right : tickRect.right >= lastRect.left)) ? 'hidden' : 'visible' });
+            __wbn$(tick).setStyle({ visibility: (lastRect && outOfBounds(tickRect)) ? 'hidden' : 'visible' });
             if (__wbn$(tick).getStyle('visibility') != 'hidden') lastRect = tickRect;
         });
         return this;
@@ -651,19 +731,20 @@ export class SliderUI {
         return steps[stepIndex];
     }
     
-    _updateProgress(e: any, tickX?: number) {
+    _updateProgress(e: any, tickPos?: number) {
         const ui = this.UI();
         const progressElem = this.progressElem
 
-        if (!this.progressDrag && !tickX && e.touches === undefined) return
-        const clientX = e ? e.clientX || e.touches[0].clientX : tickX;
+        if (!this.progressDrag && !tickPos && e.touches === undefined) return
+        const posProperty = this.vertical ? 'clientY' : 'clientX';
+        const clientPos = e ? e[posProperty] || e.touches[0][posProperty] : tickPos;
         
         const progressVal = {
-            'right':Math.round((clientX - ui.progressLeft) / ui.progressWidth * 100),
-            'left':Math.round((ui.progressRight - clientX) / ui.progressWidth * 100)
+            'right':Math.round((clientPos - (this.vertical ? ui.progressLeft : ui.progressTop)) / ui.progressLength * 100),
+            'left':Math.round(((this.vertical ? ui.progressBottom : ui.progressRight) - clientPos) / ui.progressLength * 100)
         }
 
-        var wbnVal = this._progValToWbnVal(progressVal[this.direction]);
+        var wbnVal = this._progValToWbnVal(progressVal[ui.directionAlias]);
         var newVal;
 
         const steps = this.steps;

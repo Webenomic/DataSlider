@@ -19,7 +19,6 @@
       touch-action:none;
     }
     
-
     &slider {       
         --ribbon-color: @mango; 
         --background-color:@dark;
@@ -69,6 +68,7 @@
         width:auto;
         height:10px;
         position:absolute;
+        display:none;
         
     }
     &loading::after {
@@ -118,7 +118,8 @@
         display:flex;
         justify-content: center;
         align-items:center;
-
+        z-Index:3035;
+        
         &.wbn_selected {
             font-weight:bold;
         }
@@ -153,6 +154,21 @@
             
             > @{slider-namespace-prefix}handle {
                 background: var( --hover-handle-color);    
+            }
+        }
+        
+        &.vertical {
+            min-height:100px;
+            min-width:0px;
+            width:auto;
+            
+            > @{slider-namespace-prefix}slider {
+                transform:rotate(90deg);
+                transform-origin:center left;
+                
+                 &:active,&:focus {
+                    cursor:ns-resize;
+                 }
             }
         }
       

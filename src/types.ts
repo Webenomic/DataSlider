@@ -28,6 +28,15 @@ export interface Handle extends Stylable {
     position: number,
 }
 
+export interface Bar {
+    thickness: number,
+    backgroundColor: string | Function | undefined,
+    className: string | Function | undefined,
+    borderRadius: number | Function | undefined,
+    hoverColor:string | Function | undefined,
+    style: object | Function | undefined,
+}
+
 export interface Ribbon extends Stylable {
     show: boolean,
     color: string | Function | undefined,
@@ -81,18 +90,16 @@ export interface DataBinding {
 }
 
 export type Direction = 'right' | 'left' | 'up' | 'down';
+export type Orientation = 'horizontal' | 'vertical';
 
 export interface Options {
-    orientation: 'horizontal' | 'vertical',
+    orientation: Orientation,
     direction: Direction,
-    height: number,
-    backgroundColor:string | Function | undefined,
-    hoverColor:string | Function | undefined,
-    className: string,
     responsive: boolean,
-    ribbon: Ribbon,
     defaultValue: number,
     range: Range,
+    bar: Bar,
+    ribbon: Ribbon,
     handle: Handle,
     ticks: Ticks,
     tooltips: Tooltips,

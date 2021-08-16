@@ -25,37 +25,39 @@ export class Defaults {
         
         Object.assign(config, {
             orientation: config.orientation || 'horizontal',
-            direction: config.direction || 'right',
-            height: config.height || 10,
-            backgroundColor: config.backgroundColor || null,
-            hoverColor: config.hoverColor || null,
-            className: config.className || CSSNamespace + 'slider',
+            direction: config.direction || (config.orientation === 'vertical' ? 'up' : 'right'),
+            bar: {
+                thickness: config.bar.thickness || 10,
+                backgroundColor: config.bar.backgroundColor || null,
+                hoverColor: config.bar.hoverColor || null,
+                className: config.bar.className || CSSNamespace + 'slider',
+            },
             responsive: config.responsive !== undefined ? config.responsive : true,
             defaultValue: config.defaultValue || window[container.getAttribute('wbn-bind') || ''] || 0,
             range: {
-                min: config.range?.min || 0,
-                max: config.range?.max || 100,
-                step: config.range?.step || 1,
+                min: config.range?.min !== undefined ? config.range?.min : 0,
+                max: config.range?.max !== undefined ? config.range?.max : 100,
+                step: config.range?.step !== undefined ? config.range?.step : 1,
                 decimals: config.range?.decimals || countDecimals(config.range?.step) || 0
             },
             handle: {
-                show: config.handle?.show != undefined ? config.handle?.show : true,
+                show: config.handle?.show !== undefined ? config.handle?.show : true,
                 width: config.handle?.width || null,
                 height: config.handle?.height || null,
                 borderRadius: config.handle?.borderRadius || null,
                 color: config.handle?.color || config.ribbon?.color || null,
                 style: config.handle?.style || null,
-                hoverColor: config.handle?.hoverColor || config.hoverColor || config.handle?.color || null,
+                hoverColor: config.handle?.hoverColor || config.handle?.color || null,
                 position: config.handle?.position || 0,
                 className:config.handle?.className || null 
             },
             ribbon: {
-                show: config.ribbon?.show != undefined ? config.ribbon?.show : true,
+                show: config.ribbon?.show !== undefined ? config.ribbon?.show : true,
                 color: config.ribbon?.color || null,
-                hoverColor: config.ribbon?.hoverColor || config.hoverColor || config.ribbon?.color || null,
+                hoverColor: config.ribbon?.hoverColor || config.ribbon?.color || null,
             },
             tooltips: {
-                show: config.tooltips?.show != undefined ? config.tooltips?.show : true,
+                show: config.tooltips?.show !== undefined ? config.tooltips?.show : true,
                 position:config.tooltips?.position,
                 label: {
                     text:config.tooltips?.label?.text || null,
