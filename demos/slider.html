@@ -22,11 +22,15 @@ body,html {
 
 Slider Orientation: 
 <input type="radio" name="orientation[]" value="horizontal" onClick="switchConfig('horizontal','orientation')" checked>Horizontal 
-<input type="radio" name="orientation[]" value="vertical" onClick="switchConfig('vertical','orientation')">Vertical
+<input type="radio" name="orientation[]" value="vertical" onClick="switchConfig('vertical','orientation');switchConfig('up','direction');">Vertical
 <br><br>
 Slider Direction: 
 <input type="radio" name="direction[]" value="right" onClick="switchConfig('right','direction')" checked>Right 
 <input type="radio" name="direction[]" value="left" onClick="switchConfig('left','direction')">Left 
+
+<input type="radio" name="direction[]" value="up" onClick="switchConfig('up','direction')" checked>Up
+<input type="radio" name="direction[]" value="down" onClick="switchConfig('vertical','orientation');switchConfig('down','direction');">Down 
+
 <br><br>
 Slider Bar Thickness: <input type="range" onInput="slider.config.bar.thickness = this.value;slider.ui.update();" min="1" max="20" step="1"><br>
 
@@ -66,7 +70,7 @@ var options = (boundVar) => {
 		    min:-10,
 		    max:100,
 		    decimals:2,
-		    step:1
+		    step:5
 		},
 		ribbon: {
 			show:true,
@@ -78,27 +82,34 @@ var options = (boundVar) => {
 			marks: [
 				{
 					range:{
-                        step:4,
+                        step:5,
                         min:-10,
                         max:100
                     },
-                    height:20,
-                    width:2,
+                    height:12,
+                    width:12,
                     borderRadius:16,
                     position:0,
                     color:'#990000',
                     style: (slider,val,index) => {
                     	return {
-                    		   backgroundColor: '#999'
+                   		   backgroundColor: '#999',
+                   		   width:'12px',
+                           height:'12px',
+                           margin:'0px 0px'
                     	}
                     },
-                    hoverStyle: (slider,val,index) => {
-                    	return {
-                    		backgroundColor: '#990000'
-                       }
+                    hoverStyle: {
+                    	backgroundColor: 'blue',
+                        width:'12px',
+                        height:'12px',
+                        margin:'0px 0px'
                     },
                     selectedStyle: {
-                    	backgroundColor: 'blue'
+                    	backgroundColor: 'blue',
+                    	width:'14px',
+                    	height:'14px',
+                    	margin:'-1px -1px'
                     }
                 }
 			],
@@ -114,7 +125,7 @@ var options = (boundVar) => {
 			            			 fontSize : '14px',
 			            			 color:'#fff',
 			            			 backgroundColor:'#e4a114',
-			            			 width:'20px'
+			            			 width:'30px'
 		            			 } 
 		            		 }
 			               }
@@ -162,7 +173,11 @@ var options = (boundVar) => {
 			width:10,
 			height:10,
 		    show:true,
-		    color:'#009900'
+		    style:(slider,val) => {
+		    	return {
+		    	    backgroundColor:(val % 5) ? '#00627c' : '#fff'	
+		    	}
+		    }
 		},
 		dataBinding: {
 			scope:window,

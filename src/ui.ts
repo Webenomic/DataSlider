@@ -130,10 +130,10 @@ export class SliderUI {
         const _ribbonElem = __wbn$().create('div',true).setClass(`${CSSNamespace}ribbon`).elem;
         this.container.appendChild(_ribbonElem);
         
-        const handle = this.config.handle;
+        var handle = this.config.handle;
+        
         const _handleElem = __wbn$().create('div', true)
             .setClass(`${CSSNamespace}handle ${handle.className || ''}`)
-            .setStyle(handle.style || {})
             .elem;
 
         this.container.appendChild(_handleElem);
@@ -191,16 +191,19 @@ export class SliderUI {
         
         const handlePos = this.progressElem[this.vertical ? 'offsetLeft' : 'offsetTop'] - (this.handle.getBoundingClientRect()[this.vertical ? 'width' : 'height'] / 2) + (this.vertical ? 0 : elemHeight / 2) + config.handle.position;
         
-        var handleStyle = {
+        var handleCoreStyle = {
             'height': handleDimension('height'),
             'width': handleDimension('width'),
             'borderRadius': `${handleDimension('borderRadius')}px`,
         }
         
-        Object.assign(handleStyle,this.vertical ? { 'left':handlePos } : {'top':handlePos});
+        const handleAdditionalStyle = this._valOrFunc(handleConfig.style,[this.slider,this.slider.value],{});
+        
+        Object.assign(handleCoreStyle,handleAdditionalStyle);
+        Object.assign(handleCoreStyle,this.vertical ? { 'left':handlePos } : {'top':handlePos});
         
         __wbn$(this.handle)
-            .setStyle(handleStyle);
+            .setStyle(handleCoreStyle);
         
         (config.handle.show !== true) ? __wbn$(this.handle).hide() : __wbn$(this.handle).show();
         (config.ribbon.show !== true) ? this.progressElem.classList.add('hidden_ribbon') : this.progressElem.classList.remove('hidden_ribbon');
@@ -358,8 +361,8 @@ export class SliderUI {
                     .elem;   
                 
                 const markStyle = this._valOrFunc(markSet?.style,[this.slider, markValue ,i],{});
-                const markHoverStyle = this._valOrFunc(markSet?.hoverStyle,[this.slider, markValue ,i],null);
-                const markSelectedStyle = this._valOrFunc(markSet?.selectedStyle,[this.slider, markValue ,i],null);
+                const markHoverStyle = this._valOrFunc(markSet?.hoverStyle,[this.slider, markValue ,i],markStyle);
+                const markSelectedStyle = this._valOrFunc(markSet?.selectedStyle,[this.slider, markValue ,i],markStyle);
                 
                 Object.assign(markEle.style,markStyle); 
                 
@@ -368,11 +371,11 @@ export class SliderUI {
                 const thisMarkEle = __wbn$(markEle);
                 
                thisMarkEle.on('mouseover',() => {
-                    thisMarkEle.setStyle(markHoverStyle || markStyle);  
+                    thisMarkEle.setStyle(markHoverStyle);  
                 }).on('mouseout',() => {
-                    thisMarkEle.setStyle(markStyle);  
+                    thisMarkEle.setStyle(this.slider.value == markValue ? markSelectedStyle : markStyle);  
                 }).on('selected',() => {
-                    thisMarkEle.setStyle(markSelectedStyle || markStyle);
+                    thisMarkEle.setStyle(markSelectedStyle);
                 }).on('deselected',() => {
                      thisMarkEle.setStyle(markStyle);
                 });
@@ -394,16 +397,28 @@ export class SliderUI {
     
     _positionTickMark(markEle: any, markValue: number) {
         const ui = this.UI();
+        
+        //re-register default style if tickMark is in selected state
+        const deselectedEvent = new CustomEvent('deselected');
+        const selectedEvent = new CustomEvent('selected');
+        if (markValue == this.slider.value) markEle.dispatchEvent(deselectedEvent);
+        
         const markThickness = markEle.getBoundingClientRect()[this.vertical ? 'height' : 'width'];
         const tickPos = {
             'right':(markValue - ui.min) * ui.progressLength / (ui.max - ui.min) + ui.progressOffset,
             'left':(ui.max - markValue) * ui.progressLength / (ui.max - ui.min) + ui.progressOffset
         }
-        
+
         var tickMarkPos = tickPos[ui.directionAlias];
         tickMarkPos = tickMarkPos - markThickness/2 + (this.vertical ? ui.progressThickness/2 : 0);
          
         markEle.style[ui.positionProperty] = tickMarkPos;
+        
+        //re-register selected state, if present
+        if (markValue == this.slider.value) { 
+            markEle.dispatchEvent(selectedEvent);
+            this._updateHandle(this._wbnValToProgVal(markValue));
+        }
     }
     
     _createTickLabels() {
@@ -731,6 +746,7 @@ export class SliderUI {
         });
         
         this._responsiveUI()._updateHandle(progressValue);
+        if(this.slider.value) this.slider.update(this.slider.value);
         
         return this;
     }
@@ -781,17 +797,21 @@ export class SliderUI {
         let lastRect;
         
         let outOfBounds = (tickRect) => {
-            
             if (this.orientation == 'horizontal')
                 return (this.direction == 'right' ? tickRect.left <= lastRect.right : tickRect.right >= lastRect.left)
             else
                 return (this.direction == 'down' ? tickRect.bottom <= lastRect.top : tickRect.top >= lastRect.bottom)  
          };
         
-        this.tickLabels.forEach((tick, i) => {
-            var tickRect = tick.getBoundingClientRect();
-            __wbn$(tick).setStyle({ visibility: (lastRect && outOfBounds(tickRect)) ? 'hidden' : 'visible' });
-            if (__wbn$(tick).getStyle('visibility') != 'hidden') lastRect = tickRect;
+        const tickGroups = [this.tickLabels];
+        
+        tickGroups.forEach((tickGroup) => {
+            lastRect = null;
+            tickGroup.forEach((tick, i) => {
+                var tickRect = tick.getBoundingClientRect();
+                __wbn$(tick).setStyle({ visibility: (lastRect && outOfBounds(tickRect)) ? 'hidden' : 'visible' });
+                if (__wbn$(tick).getStyle('visibility') != 'hidden') lastRect = tickRect;
+            });
         });
         return this;
     }
