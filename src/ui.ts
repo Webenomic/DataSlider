@@ -250,12 +250,17 @@ export class SliderUI {
         const me = this;
         const ui = this.UI();
         __wbn$(this.container).on(['mousedown','touchstart'], (e) => {
+            if (this.tickVal) {
+                this.slider.update(this.tickVal);
+                return;
+            }
             document.body.classList.add(`${CSSNamespace}select_disabled`);
             me.config.onDragStart(me);
             me.progressDrag = true;
             me._updateProgress(e);
             me.config.onDrag(me.slider);
         }).on(['mousemove', 'touchmove'], (e) => {
+            if (this.tickVal) return;
             me._updateProgress(e);
             me.config.onDrag(me.slider);
         },{passive:false});
