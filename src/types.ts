@@ -65,7 +65,9 @@ export interface TickLabels extends Stylable {
 
 export interface TickMark extends Stylable {
     range: Range,
-    position: number
+    position: number,
+    hoverStyle: object | Function | undefined,
+    activeStyle: object | Function | undefined
 }
 
 export interface Ticks {
@@ -104,6 +106,7 @@ export interface Options {
     ticks: Ticks,
     tooltips: Tooltips,
     dataBinding: DataBinding,
+    arrowKeys:boolean,
     onReady: Function,
     onUpdate: Function,
     onDrag: Function,

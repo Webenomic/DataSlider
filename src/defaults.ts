@@ -91,6 +91,7 @@ export class Defaults {
                 property: config.dataBinding?.property || null,
                 transform: config.dataBinding?.transform || window[container.getAttribute('wbn-bind-transform') || ''] || null,    
             },
+            arrowKeys: config.arrowKeys !== undefined ? config.arrowKeys : true,
             onReady: config.onReady || blankCallback,
             onUpdate: config.onUpdate || blankCallback,
             onDrag: config.onDrag || blankCallback,

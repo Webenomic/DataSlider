@@ -11,10 +11,10 @@ body,html {
 
 </style>
 </head>
-<body style="">
+<body>
+<div id="sliderDiv" style="width:50%;margin:50px;height:40%;float:left;margin-right:50px;border:1px solid #000;padding:30px;"></div>
 
-
-<div id="sliderDiv" style="width:50%;margin:50px;height:200px;float:left;margin-right:50px;"></div>
+<a href="javascript:resize()">Refresh</a><br><br>
 
 <div style="padding-top:40px;" wbn-bind-transform="t1" wbn-bind="foo"> </div>
 
@@ -30,7 +30,7 @@ Slider Direction:
 <br><br>
 Slider Bar Thickness: <input type="range" onInput="slider.config.bar.thickness = this.value;slider.ui.update();" min="1" max="20" step="1"><br>
 
-Handle Height: <input type="range" onInput="slider.config.handle.height = this.value;slider.ui.update();" min="10" max="80" step="1"><br>
+Handle Height: <input type="range" onInput="slider.config.handle.height = this.value;slider.ui.update();" min="1" max="80" step="1"><br>
 Handle Width: <input type="range" onInput="slider.config.handle.width = this.value;slider.ui.update();" min="1" max="80" step="1"><br>
 Handle Radius: <input type="range" onInput="slider.config.handle.borderRadius = this.value;slider.ui.update();" min="0" max="80" step="1"><br>
 Handle Position: <input type="range" onInput="slider.config.handle.position = Number(this.value);slider.ui.update();" min="-30" max="30" step="1"><br>
@@ -47,65 +47,74 @@ Max: <input type="range" onInput="updateMax(Number(this.value))" value="2" min="
 
 <script>
 
-foo=-20;
+foo=20;
 
 var t1 = (val) => {return Number(val).toFixed(2) }; 
 var t2 = (val) => {return val+'***'}; 
 
 var options = (boundVar) => { 
 	return {
-		direction:'up',
-		orientation:'vertical',
+		orientation:'horizontal',
 		bar: {
-			thickness:10,
+			thickness:5,
 	        borderRadius:10,
-	        backgroundColor:'#474747'
 		},
 		defaultValue:foo,
-		color:'#00628c',
-		hoverColor:'#c0c0c0',
+		
 		responsive:true,
 		range:{
-		    min:-100,
-		    max:10,
+		    min:-10,
+		    max:100,
 		    decimals:2,
 		    step:1
 		},
 		ribbon: {
 			show:true,
 			color:(slider) => { return 'rgb(' + (slider.value+50)*5 + ',100,50)'; },
+			color:'#00628c',
+            hoverColor:'#990000',
 		},
 		ticks: {
 			marks: [
 				{
-                   
 					range:{
-                        step:20,
-                        min:-100,
-                        max:10
+                        step:4,
+                        min:-10,
+                        max:100
                     },
-                    height:16,
-                    width:16,
+                    height:20,
+                    width:2,
                     borderRadius:16,
                     position:0,
                     color:'#990000',
-                    style: {
-                        border:'2px solid #fff'
-                    } 
+                    style: (slider,val,index) => {
+                    	return {
+                    		   backgroundColor: '#999'
+                    	}
+                    },
+                    hoverStyle: (slider,val,index) => {
+                    	return {
+                    		backgroundColor: '#990000'
+                       }
+                    },
+                    selectedStyle: {
+                    	backgroundColor: 'blue'
+                    }
                 }
 			],
 			
 			labels: {
-			    data:[0,-10,-20,-30,-40,-100].map((tick,i) => {
+			    data:[-10,10,20,30,40].map((tick,i) => {
 			           return { 
 			               value: tick, 
 			               label: {
 			            	 text: (val,i) => { return val + 'x'; },
 			            	 style: (val) => { 
 			            		 return { 
-			            			 fontSize : 12+2*val+'px',
+			            			 fontSize : '14px',
 			            			 color:'#fff',
-			            			 backgroundColor:'#e4a114'
+			            			 backgroundColor:'#e4a114',
+			            			 width:'20px'
 		            			 } 
 		            		 }
 			               }
@@ -124,7 +133,7 @@ var options = (boundVar) => {
 	            },
 			    snap:false,
 			    labelsClickable: true,
-			    position:0
+			    position:20
 			}
 		},
 		tooltips: {
@@ -150,22 +159,23 @@ var options = (boundVar) => {
 			position:-20
 		},
 		handle: {
-			width:20,
-			height:20,
+			width:10,
+			height:10,
 		    show:true,
-		    color:(slider) => { return 'rgb(' + (slider.value+50)*5 + ',100,50)'; },
+		    color:'#009900'
 		},
 		dataBinding: {
 			scope:window,
 			property:'foo'
-		}
+		},
+		arrowKeys:true 
 	};
 }
 
 //var sliders = [];
 
 
-slider = new DataSlider(document.getElementById('sliderDiv'),options('foo'));
+var slider = new DataSlider(document.getElementById('sliderDiv'),options('foo'));
 
 function updateMin(minValue) {
 	let config = slider.config;

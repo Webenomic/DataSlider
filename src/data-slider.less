@@ -16,6 +16,7 @@
       height:auto;
       cursor: pointer;
       min-width:100px;
+      width:100%;
       touch-action:none;
     }
     
@@ -118,7 +119,7 @@
         display:flex;
         justify-content: center;
         align-items:center;
-        z-Index:3035;
+
         
         &.wbn_selected {
             font-weight:bold;
@@ -161,6 +162,7 @@
             min-height:100px;
             min-width:0px;
             width:auto;
+            height:auto;
             
             > @{slider-namespace-prefix}slider {
                 transform:rotate(90deg);
