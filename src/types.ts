@@ -85,6 +85,15 @@ export interface Tooltips extends Stylable {
    }
 }
 
+export interface Cap extends Stylable {
+    onClick: Function    
+}
+
+export interface Caps {
+    startCap: Cap,
+    endCap: Cap
+}
+
 export interface DataBinding {
     scope: any,
     property: any | undefined,
@@ -105,6 +114,7 @@ export interface Options {
     handle: Handle,
     ticks: Ticks,
     tooltips: Tooltips,
+    caps: Caps,
     dataBinding: DataBinding,
     arrowKeys:boolean,
     onReady: Function,

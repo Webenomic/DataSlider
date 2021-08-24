@@ -22,6 +22,8 @@ export class SliderUI {
     markSteps: number[];
     tickOn: number | null;
     tickVal: any;
+    startCap: HTMLElement | null;
+    endCap: HTMLElement | null;
     progressDrag: boolean;
 
     constructor(parent: any, config: Options, slider: any) {
@@ -33,6 +35,7 @@ export class SliderUI {
         this._createElements()
             ._assignAttributes()
             ._createSteps()
+            ._createCaps()
             ._createTickLabels()
             ._createTickMarks()
             ._createTooltip()
@@ -149,8 +152,9 @@ export class SliderUI {
     }
 
     update() {
-        this._assignAttributes();
-        this._refreshUI();
+        this._assignAttributes()
+            ._createSteps()
+            ._refreshUI();
         return this;
     }
 
@@ -576,6 +580,55 @@ export class SliderUI {
         return this;
     }
     
+    _createCaps() {
+        const ui = this.UI();
+        const capConfig = this.slider.config.caps;
+        const startCapConfig = capConfig.startCap;
+        const endCapConfig = capConfig.endCap;
+        if (!startCapConfig && !endCapConfig) return this;
+        
+        const capProps =  {
+                'up' : ['top','bottom'],
+                'down' : ['bottom','top'],
+                'right' : ['left','right'],
+                'left': ['right','left'] 
+        };
+            
+        [startCapConfig,endCapConfig].forEach((capConfig,i) => {
+
+            const capObj = i == 0 ? 
+            {
+                prop: capProps[this.direction][0],
+                desc: 'start'
+            } : {
+                prop: capProps[this.direction][1],
+                desc: 'end'
+            };
+            
+            if (!capConfig) {
+                i == 0 ? [this.startCap = null] : [this.endCap == null];
+                return this;
+            }
+           
+            var _capStyle = this._valOrFunc(startCapConfig.style,[this.slider],{});
+            
+            const _capElement = __wbn$().create('div',true)
+                                .setClass(`${CSSNamespace}cap ${capObj.desc}`)
+                                .setStyle(_capStyle)
+                                .html(capConfig.label.text)
+                                .elem;
+                                            
+            this.parent.appendChild(_capElement);
+            _capElement.style[this.vertical ? 'top' : 'left'] = ui.containerRect[capObj.prop] - (capObj.prop == 'right' ? _capElement.getBoundingClientRect()[this.vertical ? 'height' : 'width'] : 0);
+
+            i == 0 ? [this.startCap = _capElement] : [this.endCap = _capElement];
+            
+            
+        });
+      
+        return this;
+    }
+    
     _createTooltip() {
         const tooltipConfig = this.slider.config.tooltips;
         
@@ -591,23 +644,21 @@ export class SliderUI {
         
         this.tickOn = null;
         const posProperty = this.vertical ? 'clientY' : 'clientX';
-        if (this.config.tooltips.ticks.show === true) {
-            const tooltipConfig = this.config.tooltips.ticks;
-            this.tickLabels.forEach((tickEle,i) => {
-                __wbn$(tickEle).on('mouseover',(e) => { 
-                    this.tickOn = i;
-                    this.tickVal = this.config.ticks.labels.data ? this.config.ticks.labels.data[i].value : null;
-                    this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
-                }).on('mouseout',() => { 
-                    this.tickVal = null;
-                    this.tickOn = null; 
-                });
-            
+        
+        this.tickLabels.forEach((tickEle,i) => {
+            __wbn$(tickEle).on('mouseover',(e) => { 
+                this.tickOn = i;
+                this.tickVal = this.config.ticks.labels.data ? this.config.ticks.labels.data[i].value : null;
+                //if (tooltipConfig.ticks.show) this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
+            }).on('mouseout',() => { 
+                this.tickVal = null;
+                this.tickOn = null; 
             });
-        }
+        });
         
         [this.container,document].forEach((elem) => {
             __wbn$(elem).on(['mouseover','mousemove','touchmove','touchstart'],(e: any) => {
+                if (this.tickOn && !tooltipConfig.ticks.show) return;
                 if (this.progressDrag || e.currentTarget == this.container) this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
             }).on(['touchend','mouseup','mouseout'],() => {
                 _tooltip.style.display = 'none'; 
@@ -736,11 +787,22 @@ export class SliderUI {
     }
 
     _refreshUI() {
+        const ui = this.UI();
         const tickLabelData = this.slider.config.ticks.labels.data;
         const progressElem = this.progressElem;
         const progressValue = Number(progressElem.value);
         
         this._constrainContainer();
+        
+        var endCap = this.direction == 'down' || this.direction == 'left' ? this.startCap : this.endCap;
+        
+        if (endCap) {
+            Object.assign(endCap.style, this.vertical ? { 
+                top: this.parent.clientHeight
+            } : {
+                left: this.parent.clientWidth
+            });
+        }
         
         this.tickLabels.forEach((tick, i) => {
             this._positionTickLabel(tick, tickLabelData[i] ? tickLabelData[i].value : tick, tickLabelData[i], i);
@@ -775,23 +837,26 @@ export class SliderUI {
             boundaryStart = tickStart < boundaryStart ? tickStart : boundaryStart;
             var tickEnd = tick.getBoundingClientRect()[boundaries.end];
             boundaryEnd = tickEnd > boundaryEnd ? tickEnd : boundaryEnd; 
-            
         });
         
        boundaryStart = ui.containerRect[boundaries.start] - boundaryStart;
        boundaryEnd = boundaryEnd - ui.containerRect[boundaries.end];
+       
+       const capStart = (this.startCap ? this.startCap.getBoundingClientRect()[this.vertical ? 'height' : 'width'] : 0);
+       const capEnd = (this.endCap ? this.endCap.getBoundingClientRect()[this.vertical ? 'height' : 'width'] : 0);
+       const capTotal = capStart+capEnd;
 
        __wbn$(this.container).setStyle(this.vertical ? {
-           height: ui.parentHeight - (boundaryEnd) - (boundaryStart) - 2,
-           marginTop: (this.direction == 'down') ? boundaryStart : -boundaryStart
+           height: ui.parentHeight - (boundaryEnd) - (boundaryStart) - 2 - capTotal,
+           marginTop: (this.direction == 'down') ? boundaryStart+capStart : boundaryStart+capStart 
         } : {
-           width: ui.parentWidth - (boundaryEnd) - (boundaryStart) - 2,
-           marginLeft: boundaryStart
+           width: ui.parentWidth - (boundaryEnd) - (boundaryStart) - 2 - capTotal,
+           marginLeft: boundaryStart + capStart
         });
         
         if (this.vertical) {
             __wbn$(this.progressElem).setStyle({
-                width: ui.parentHeight - (boundaryEnd) - (boundaryStart) - 2,
+                width: ui.parentHeight - (boundaryEnd) - (boundaryStart) - 2 - capTotal,
             }) 
         }
     }
@@ -808,7 +873,7 @@ export class SliderUI {
                 return (this.direction == 'down' ? tickRect.bottom <= lastRect.top : tickRect.top >= lastRect.bottom)  
          };
         
-        const tickGroups = [this.tickLabels];
+        const tickGroups = [this.tickLabels,this.tickMarks];
         
         tickGroups.forEach((tickGroup) => {
             lastRect = null;

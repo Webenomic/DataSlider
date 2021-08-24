@@ -21,9 +21,9 @@ class Slider {
         this.ui     = new SliderUI(parent, options, this);
         this.bindVarName = this.config.dataBinding.property;
         this.bindVarScope = this.config.dataBinding.scope;
-        //this.parent.slider = this;  
         this.wbnBindScope = {};
         this._createProxy();
+        this.config.onReady(this);
     }
     
     reset(val?: number) {

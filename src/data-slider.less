@@ -124,6 +124,7 @@
         -moz-user-select: -moz-none;
         -o-user-select: none;
         user-select: none;
+        z-Index:3030;
         
         &.wbn_selected {
             font-weight:bold;
@@ -142,7 +143,12 @@
         width:1px;
         z-Index:3020;
     }
-
+    
+    &cap {
+        position:absolute;
+        
+    }
+    
     &container {
         
         --hover-ribbon-color: @mango;

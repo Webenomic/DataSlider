@@ -64,7 +64,7 @@ export class Defaults {
                     style:config.tooltips?.label?.style || null
                 },
                 ticks: {
-                    show:config.tooltips?.ticks?.show || config.tooltips?.show || true,
+                    show:config.tooltips?.ticks?.show !== undefined ? config.tooltips?.ticks?.show : true,
                     label: {
                         text:config.tooltips?.ticks?.label?.text || config.tooltips?.label?.text || null,
                         style:config.tooltips?.ticks?.label?.style || config.tooltips?.label?.style || null,
@@ -85,6 +85,10 @@ export class Defaults {
                     onTick: config.ticks?.labels?.onTick || blankCallback,
                     className: config.ticks?.labels?.className || null
                 }
+            },
+            caps: {
+                startCap: config.caps?.startCap || null,
+                endCap: config.caps?.endCap || null,
             },
             dataBinding: {
                 scope: config.dataBinding?.scope || window,
