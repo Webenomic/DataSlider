@@ -22,10 +22,16 @@ export interface Range {
     decimals: number
 }
 
+export interface HandleLabel extends Stylable {
+    position: number | Function | undefined,
+    text: string | Function | undefined
+}
+
 export interface Handle extends Stylable {
     show: boolean,
     hoverColor: string | Function | undefined,
-    position: number,
+    position: number | Function,
+    label: HandleLabel
 }
 
 export interface Bar {
@@ -46,7 +52,7 @@ export interface Ribbon extends Stylable {
 export interface TickLabel extends Stylable {
     value: number,
     label: Label,
-    position: number,
+    position: number | Function,
     hoverStyle: object | Function | undefined,
     activeStyle: object | Function | undefined,
 }
@@ -55,7 +61,7 @@ export interface TickLabels extends Stylable {
     data: TickLabel[] | Function | null,
     responsive: true,
     labelsClickable: boolean,
-    position: number,
+    position: number | Function,
     snap: boolean,
     style: object | Function | undefined,
     hoverStyle: object | Function | undefined
@@ -65,7 +71,7 @@ export interface TickLabels extends Stylable {
 
 export interface TickMark extends Stylable {
     range: Range,
-    position: number,
+    position: number | Function,
     hoverStyle: object | Function | undefined,
     activeStyle: object | Function | undefined
 }
@@ -77,7 +83,7 @@ export interface Ticks {
 
 export interface Tooltips extends Stylable {
    show: boolean,
-   position: number,
+   position: number | Function,
    label: Label,
    ticks: {
         show: boolean,

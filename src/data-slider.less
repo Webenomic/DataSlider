@@ -18,6 +18,10 @@
       min-width:100px;
       width:100%;
       touch-action:none;
+      
+      &:focus {
+         outline: none !important;  
+      }
     }
     
     &slider {       
@@ -96,6 +100,12 @@
         top:0px;
         background: var(--handle-color);
         z-Index:3030;
+    }
+    
+    &handle_label {
+        position:absolute;
+        background: inherit;
+        z-Index:3035;
     }
     
     &tooltip {

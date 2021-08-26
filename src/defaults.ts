@@ -49,7 +49,8 @@ export class Defaults {
                 style: config.handle?.style || null,
                 hoverColor: config.handle?.hoverColor || config.handle?.color || null,
                 position: config.handle?.position || 0,
-                className:config.handle?.className || null 
+                className:config.handle?.className || null,
+                label: config.handle?.label || null
             },
             ribbon: {
                 show: config.ribbon?.show !== undefined ? config.ribbon?.show : true,

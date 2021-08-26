@@ -58,7 +58,7 @@ var t2 = (val) => {return val+'***'};
 
 var options = (boundVar) => { 
 	return {
-		orientation:'vertical',
+		orientation:'horizontal',
 		bar: {
 			thickness:5,
 	        borderRadius:10,
@@ -89,7 +89,9 @@ var options = (boundVar) => {
                     height:20,
                     width:20,
                     borderRadius:16,
-                    position:0,
+                    position:(slider,tickVal,tickIndex) => {
+                        return tickIndex % 2 || tickIndex == 0 ? -5 : +5;	
+                    },
                     color:'#990000',
                     style: (slider,val,index) => {
                     	return {
@@ -144,13 +146,15 @@ var options = (boundVar) => {
 	            },
 			    snap:false,
 			    labelsClickable: true,
-			    position:20
+			    position:(slider,tickVal,tickIndex) => {
+			    	return tickIndex % 2 ? 25 : -25; 
+			    }
 			}
 		},
 		tooltips: {
 			show:true,
 			label: {
-				text:(val) => { return val + 'x'; },
+				text:(slider,val) => { return val + 'x'; },
 				style:(val) => {
 					return {
 						   
@@ -160,23 +164,48 @@ var options = (boundVar) => {
 			ticks: {
 			   show:true,
                label:{
-                   text:(val) => { return 'VAL:'+val}
+                   text:(silder,val) => { return 'VAL:'+val}
                }
 			},
-			style: {
-				fontWeight:'bold'
+			style: (slider,val) => {
+				return {
+				    fontWeight:'bold',
+				}
 			},
 			position:-20
 		},
 		handle: {
-			width:10,
-			height:10,
+			width:(slider,val) => {
+				return val;
+			},
+			height:(slider,val) => {
+                return val;
+            },
+            borderRadius:(slider,val) => {
+                return val;
+            },
 		    show:true,
 		    style:(slider,val) => {
 		    	return {
-		    	    backgroundColor:(val % 5) ? '#00627c' : '#fff'	
+		    	    backgroundColor:(val % 5) ? '#00627c' : '#e4a114'	
 		    	}
-		    }
+		    },
+		    label: {
+		    	  show:true,
+		    	  style:(slider,val) => {
+		    		  return {
+		    			  color: '#ffffff',
+		    			  fontWeight:'bold',
+		    		  }
+		    	  },
+		    	  text:(slider,val) => {
+		    		  return val;
+		    	  },
+		    	  position:(slider,val) => {
+		             return 0;
+		          }
+		    },
+		    position:20
 		},
 		caps: {
 			startCap: {
