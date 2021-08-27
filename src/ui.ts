@@ -27,6 +27,7 @@ export class SliderUI {
     startCap: HTMLElement | null;
     endCap: HTMLElement | null;
     progressDrag: boolean;
+    uiCreated: Promise<SliderUI>;
 
     constructor(parent: any, config: Options, slider: any) {
         this.slider = slider;
@@ -34,19 +35,40 @@ export class SliderUI {
         this.parent = parent;
         this.focused = false;
         
-        this._createElements()
-            ._assignAttributes()
-            ._createSteps()
-            ._createCaps()
-            ._createTickLabels()
-            ._createTickMarks()
-            ._createTooltip()
-            ._assignEvents()
-            ._refreshUI()
-            ._responsiveUI()
-            .UI();
+        this.uiCreated = new Promise((res,rej) => {
             
+            console.log('creating elements');
+            
+            this._createElements()
+            .then(() => {
+                console.log('assigning attributes');
+                this._assignAttributes()
+            }).then(() => {
+                this._createSteps()
+            }).then(() => {
+                this._createCaps()
+            }).then(() => {
+                console.log('creating tick labels');
+                this._createTickLabels()
+            }).then(() => {
+                this._createTickMarks()
+            }).then(() => {
+                this._createTooltip()
+            }).then(() => {
+                this._assignEvents()
+            }).then(() => {
+                this._refreshUI()
+            }).then(() => {
+                this._responsiveUI()
+            }).then(() => {
+                this.UI();
+            });
+            res(this);
+        
+        });
+        
         return this;
+        
     }
 
     UI() {
@@ -101,105 +123,112 @@ export class SliderUI {
     }
 
     _createElements() {
-        this.container = __wbn$().create('div',true).setAttr('tabindex','0').elem;
-        this.parent.appendChild(this.container);
-        this.orientation = this.config.orientation;
-        this.vertical = this.orientation === 'vertical';
-        this.container.classList.add(`${CSSNamespace}container`);
-        this.container.classList.add(this.orientation);
+        
+        return new Promise((res,rej) => {
+            
+            this.container = __wbn$().create('div',true).setAttr('tabindex','0').elem;
+            this.parent.appendChild(this.container);
+            this.orientation = this.config.orientation;
+            this.vertical = this.orientation === 'vertical';
+            this.container.classList.add(`${CSSNamespace}container`);
+            this.container.classList.add(this.orientation);
 
-        
-        this.direction = this.config.direction;
-        const directionToCSS = {
-            'left':'rtl',
-            'down':'ltr',
-            'right':'ltr',
-            'up':'rtl'
-        }
-        
-        const parentHeight = parseInt(window.getComputedStyle(this.parent, null).getPropertyValue('height')); 
-        
-        const _progressElem = __wbn$().create('progress', true)
-            .setClass(`${CSSNamespace}slider`)
-            .setAttr('value', this.config.defaultValue.toString())
-            .setAttr('tabindex', '0')
-            .setStyle({
-                direction:directionToCSS[this.direction],
-                width:this.vertical ? parentHeight : 'inherit'
-            })
-            .elem;
-        if (this.vertical) _progressElem.style.marginLeft = this.config.bar.thickness/2;
-        this.container.appendChild(_progressElem);
-
-        
-        const _ribbonElem = __wbn$().create('div',true).setClass(`${CSSNamespace}ribbon`).elem;
-        this.container.appendChild(_ribbonElem);
-        
-        var handle = this.config.handle;
-        
-        const _handleElem = __wbn$().create('div', true)
-            .setClass(`${CSSNamespace}handle ${handle.className || ''}`)
-            .elem;
-        
-        const _handleLabelElem = __wbn$().create('div', true)
-                                            .setClass(`${CSSNamespace}handle_label`)
-                                            .elem;
-            _handleElem.appendChild(_handleLabelElem);
-       
-        this.container.appendChild(_handleElem);
-              
-        Object.assign(this, {
-            container: this.container,
-            progressElem: _progressElem,
-            ribbon:_ribbonElem,
-            handle: _handleElem,
-            handleLabel: _handleLabelElem
+            this.direction = this.config.direction;
+            const directionToCSS = {
+                'left':'rtl',
+                'down':'ltr',
+                'right':'ltr',
+                'up':'rtl'
+            }
+            
+            const parentHeight = parseInt(window.getComputedStyle(this.parent, null).getPropertyValue('height')); 
+            
+            const _progressElem = __wbn$().create('progress', true)
+                .setClass(`${CSSNamespace}slider`)
+                .setAttr('value', this.config.defaultValue.toString())
+                .setAttr('tabindex', '0')
+                .setStyle({
+                    direction:directionToCSS[this.direction],
+                    width:this.vertical ? parentHeight : 'inherit'
+                })
+                .elem;
+            if (this.vertical) _progressElem.style.marginLeft = this.config.bar.thickness/2;
+            this.container.appendChild(_progressElem);
+    
+            
+            const _ribbonElem = __wbn$().create('div',true).setClass(`${CSSNamespace}ribbon`).elem;
+            this.container.appendChild(_ribbonElem);
+            
+            var handle = this.config.handle;
+            
+            const _handleElem = __wbn$().create('div', true)
+                .setClass(`${CSSNamespace}handle ${handle.className || ''}`)
+                .elem;
+            
+            const _handleLabelElem = __wbn$().create('div', true)
+                                                .setClass(`${CSSNamespace}handle_label`)
+                                                .elem;
+                _handleElem.appendChild(_handleLabelElem);
+           
+            this.container.appendChild(_handleElem);
+                  
+            Object.assign(this, {
+                container: this.container,
+                progressElem: _progressElem,
+                ribbon:_ribbonElem,
+                handle: _handleElem,
+                handleLabel: _handleLabelElem
+            });
+            
+            res(this);
         });
-        
-        return this;
+
     }
 
     update() {
         this._assignAttributes()
-            ._createSteps()
-            ._refreshUI();
+            .then(() => this._createSteps())
+            .then(() => this._refreshUI());
         return this;
     }
 
     _assignAttributes() {
-        const ui = this.UI();
-        const config = this.config;
         
-        __wbn$(this.progressElem)
-            .setStyle({ 'height': ui.height })
-            .setAttr('min', '0')
-            .setAttr('max', '100')
-            .setAttr('wbn-min', ui.min.toString())
-            .setAttr('wbn-max', ui.max.toString());
-        
-        var cssVars = {
-          '--background-color':[this.progressElem,config.bar.backgroundColor],
-          '--ribbon-color':[this.progressElem,config.ribbon.color || config.handle.color],
-          '--handle-color':[this.handle,config.handle.color],
-          '--hover-ribbon-color':[this.container,config.ribbon.hoverColor || config.ribbon.color || null],
-          '--hover-handle-color':[this.container,config.handle.hoverColor || config.ribbon.hoverColor || config.handle.color || null],
-        };
-        
-        
-        for (const [key, [ele,value]] of Object.entries(cssVars)) {
-            var thisValue = value;
-            if (typeof thisValue === 'function') {
-                thisValue = thisValue(this.slider);
+        return new Promise((res,rej) => {
+            const ui = this.UI();
+            const config = this.config;
+            
+            __wbn$(this.progressElem)
+                .setStyle({ 'height': ui.height })
+                .setAttr('min', '0')
+                .setAttr('max', '100')
+                .setAttr('wbn-min', ui.min.toString())
+                .setAttr('wbn-max', ui.max.toString());
+            
+            var cssVars = {
+              '--background-color':[this.progressElem,config.bar.backgroundColor],
+              '--ribbon-color':[this.progressElem,config.ribbon.color || config.handle.color],
+              '--handle-color':[this.handle,config.handle.color],
+              '--hover-ribbon-color':[this.container,config.ribbon.hoverColor || config.ribbon.color || null],
+              '--hover-handle-color':[this.container,config.handle.hoverColor || config.ribbon.hoverColor || config.handle.color || null],
+            };
+            
+            
+            for (const [key, [ele,value]] of Object.entries(cssVars)) {
+                var thisValue = value;
+                if (typeof thisValue === 'function') {
+                    thisValue = thisValue(this.slider);
+                }
+                if (value && ele) ele['style'].setProperty(key,`${thisValue}`);
             }
-            if (value && ele) ele['style'].setProperty(key,`${thisValue}`);
-        }
-        
-        this._positionHandle();
-        
-        (config.handle.show !== true) ? __wbn$(this.handle).hide() : __wbn$(this.handle).show();
-        (config.ribbon.show !== true) ? this.progressElem.classList.add('hidden_ribbon') : this.progressElem.classList.remove('hidden_ribbon');
-        
-        return this;
+            
+            this._positionHandle();
+            
+            (config.handle.show !== true) ? __wbn$(this.handle).hide() : __wbn$(this.handle).show();
+            (config.ribbon.show !== true) ? this.progressElem.classList.add('hidden_ribbon') : this.progressElem.classList.remove('hidden_ribbon');
+            
+            return res(this);
+        });
     }
     
     _positionHandle() {
@@ -281,80 +310,83 @@ export class SliderUI {
     }
 
     _assignEvents() {
-        const me = this;
-        const ui = this.UI();
-        __wbn$(this.container).on(['mousedown','touchstart'], (e) => {
-            if (this.tickVal) {
-                this.slider.update(this.tickVal);
-                return;
-            }
-            document.body.classList.add(`${CSSNamespace}select_disabled`);
-            me.config.onDragStart(me);
-            me.progressDrag = true;
-            me._updateProgress(e);
-            me.config.onDrag(me.slider);
-        }).on(['mousemove', 'touchmove'], (e) => {
-            if (this.tickVal) return;
-            me._updateProgress(e);
-            me.config.onDrag(me.slider);
-        },{passive:false});
-        
-        __wbn$(document).on(['mouseup','touchend'], (e) => { 
-            if(me.progressDrag) me.config.onDragEnd(me.slider); 
-            me.progressDrag = false;
-            document.body.classList.remove(`${CSSNamespace}select_disabled`); 
-        });
-        
-        document.addEventListener('mousemove', (e) => { 
-            me._updateProgress(e);
-            me.config.onDrag(me.slider); 
-        });
-        
-        if (this.config.arrowKeys) {
-            const arrowKeyCodes = {
-                'right': { 37: -1, 39: 1},
-                'left': { 37: 1, 39: -1},
-                'up': {38: 1, 40: -1},
-                'down':{38: -1, 40: 1}
-            }
-            
-           
-            const focusElements = this.tickLabels.concat([this.container,this.handle,this.progressElem]);
-            focusElements.forEach((elem) => {
-                elem.addEventListener('focus',(e) => {
-                    this.focused = true; 
-                });
-                elem.addEventListener('blur',(e) => {
-                    this.focused = false; 
-                });
-            });
-            
-             document.addEventListener('keydown', (e) => {
-                var increment = arrowKeyCodes[this.direction][e.which];
-                if (increment && this.focused) {
-                    if (e.shiftKey) increment *= 5;
-                    var newValue = Number(this.slider.value) + (increment * Number(this.config.range.step));
-                    this.slider.update(newValue);
-                }    
-            });
-            
-            
-            
-        }
-        
-        document.querySelectorAll('input[wbn-bind]').forEach((ele: any) => {
-            var eleBindVarName = ele.getAttribute('wbn-bind');
-            var changeFunc = () => { window.wbnScope[eleBindVarName] = ele.value; };
-            ele.addEventListener('change', changeFunc);
-            ele.addEventListener('keyup', changeFunc);
-            ele.addEventListener('blur', () => {
-                if (ele.value > ui.max) ele.value = ui.max;
-                if (ele.value < ui.min) ele.value = ui.min;
-            });
-        });
 
-        window.addEventListener('resize', (e) => { me._refreshUI(); });
-        return this;
+        return new Promise((res,rej) => {         
+            const me = this;
+            const ui = this.UI();
+            __wbn$(this.container).on(['mousedown','touchstart'], (e) => {
+                if (this.tickVal) {
+                    this.slider.update(this.tickVal);
+                    return;
+                }
+                document.body.classList.add(`${CSSNamespace}select_disabled`);
+                me.config.onDragStart(me);
+                me.progressDrag = true;
+                me._updateProgress(e);
+                me.config.onDrag(me.slider);
+            }).on(['mousemove', 'touchmove'], (e) => {
+                if (this.tickVal) return;
+                me._updateProgress(e);
+                me.config.onDrag(me.slider);
+            },{passive:false});
+            
+            __wbn$(document).on(['mouseup','touchend'], (e) => { 
+                if(me.progressDrag) me.config.onDragEnd(me.slider); 
+                me.progressDrag = false;
+                document.body.classList.remove(`${CSSNamespace}select_disabled`); 
+            });
+            
+            document.addEventListener('mousemove', (e) => { 
+                me._updateProgress(e)
+                    .then(() => { me.config.onDrag(me.slider) }); 
+            });
+            
+            if (this.config.arrowKeys) {
+                const arrowKeyCodes = {
+                    'right': { 37: -1, 39: 1},
+                    'left': { 37: 1, 39: -1},
+                    'up': {38: 1, 40: -1},
+                    'down':{38: -1, 40: 1}
+                }
+                
+               
+                const focusElements = this.tickLabels.concat([this.container,this.handle,this.progressElem]);
+                focusElements.forEach((elem) => {
+                    elem.addEventListener('focus',(e) => {
+                        this.focused = true; 
+                    });
+                    elem.addEventListener('blur',(e) => {
+                        this.focused = false; 
+                    });
+                });
+                
+                 document.addEventListener('keydown', (e) => {
+                    var increment = arrowKeyCodes[this.direction][e.which];
+                    if (increment && this.focused) {
+                        if (e.shiftKey) increment *= 5;
+                        var newValue = Number(this.slider.value) + (increment * Number(this.config.range.step));
+                        this.slider.update(newValue);
+                    }    
+                });
+                
+                
+                
+            }
+            
+            document.querySelectorAll('input[wbn-bind]').forEach((ele: any) => {
+                var eleBindVarName = ele.getAttribute('wbn-bind');
+                var changeFunc = () => { window.wbnScope[eleBindVarName] = ele.value; };
+                ele.addEventListener('change', changeFunc);
+                ele.addEventListener('keyup', changeFunc);
+                ele.addEventListener('blur', () => {
+                    if (ele.value > ui.max) ele.value = ui.max;
+                    if (ele.value < ui.min) ele.value = ui.min;
+                });
+            });
+    
+            window.addEventListener('resize', (e) => { me._refreshUI(); });
+            res(this);
+        });
     }
     
     _valOrFunc(item, val, defaultVal) {
@@ -461,74 +493,80 @@ export class SliderUI {
     }
     
     _createTickLabels() {
-        const tickLabels = this.slider.config.ticks.labels;
-        var tickData = tickLabels.data;
-        const uniq = (val, i, self) => { return self.indexOf(val) === i };
-        tickData.sort((a,b) => (a.value > b.value) ? 1 : -1).filter(uniq);
-        this.tickLabels = [];
-        if (tickData.length === 0) return this;
-
-        const me = this;
         
-        var ticksAndSteps: any[] = tickData.map((tick, i) => { return tick.value }).sort();
-        const ui = this.UI();
+        return new Promise((res,rej) => {
         
-        ticksAndSteps.forEach((tick, i) => {
+            const tickLabels = this.slider.config.ticks.labels;
+            var tickData = tickLabels.data;
+            const uniq = (val, i, self) => { return self.indexOf(val) === i };
+            tickData.sort((a,b) => (a.value > b.value) ? 1 : -1).filter(uniq);
+            this.tickLabels = [];
+            if (tickData.length === 0) return this;
+    
+            const me = this;
             
-            const tickValue = tickData[i]?.value !== undefined ? tickData[i]?.value : tick;
+            var ticksAndSteps: any[] = tickData.map((tick, i) => { return tick.value }).sort();
+            const ui = this.UI();
             
-            if (tickValue < ui.min || tickValue > ui.max) return;
-
-            let tickLabel = this._valOrFunc(tickData[i]?.label?.text,[tickData[i]?.value,i],tickData[i]?.value); 
+            ticksAndSteps.forEach((tick, i) => {
+                
+                const tickValue = tickData[i]?.value !== undefined ? tickData[i]?.value : tick;
+                
+                if (tickValue < ui.min || tickValue > ui.max) return;
+    
+                let tickLabel = this._valOrFunc(tickData[i]?.label?.text,[tickData[i]?.value,i],tickData[i]?.value); 
+                
+                let tickClassName, tickStyle, tickHoverStyle, tickSelectedStyle;
             
-            let tickClassName, tickStyle, tickHoverStyle, tickSelectedStyle;
-        
-            tickClassName = tickLabels.className || tick.className || ''; 
-        
-            let tickStyles = {
-                style: {},
-                hoverStyle: {},
-                selectedStyle: {}
-            };
+                tickClassName = tickLabels.className || tick.className || ''; 
             
-            ['style','hoverStyle','selectedStyle'].forEach((styleVar) => {
-                tickStyles[styleVar] = {
-                    ...this._valOrFunc(tickData[i]?.label[styleVar],[tickData[i]?.value,i],{}),
-                    ...this._valOrFunc(tickLabels[styleVar],[tickData[i]?.value,i],{})
-                }
-            });
-
-            const containerRect = this.container.getBoundingClientRect();
-                        
-            var tickEle = __wbn$().create('div', true)
-                .setStyle(tickStyles.style)
-                .setClass(`${CSSNamespace}tick_label ${tickClassName}`)
-                .setAttr('wbn-value', tickValue)
-                .html(tickLabel);
-             
-            tickEle.on(['mouseover','focus'],(e) => {
-                tickEle.setStyle(tickStyles.hoverStyle);
-            }).on(['mouseout','blur','deselected'],(e) => {
-                if (!tickEle.elem.classList.contains('wbn_selected')) 
-                    tickEle.setStyle(tickStyles.style);
-                else 
+                let tickStyles = {
+                    style: {},
+                    hoverStyle: {},
+                    selectedStyle: {}
+                };
+                
+                ['style','hoverStyle','selectedStyle'].forEach((styleVar) => {
+                    tickStyles[styleVar] = {
+                        ...this._valOrFunc(tickData[i]?.label[styleVar],[tickData[i]?.value,i],{}),
+                        ...this._valOrFunc(tickLabels[styleVar],[tickData[i]?.value,i],{})
+                    }
+                });
+    
+                const containerRect = this.container.getBoundingClientRect();
+                            
+                var tickEle = __wbn$().create('div', true)
+                    .setStyle(tickStyles.style)
+                    .setClass(`${CSSNamespace}tick_label ${tickClassName}`)
+                    .setAttr('wbn-value', tickValue)
+                    .html(tickLabel);
+                 
+                tickEle.on(['mouseover','focus'],(e) => {
+                    tickEle.setStyle(tickStyles.hoverStyle);
+                }).on(['mouseout','blur','deselected'],(e) => {
+                    if (!tickEle.elem.classList.contains('wbn_selected')) 
+                        tickEle.setStyle(tickStyles.style);
+                    else 
+                        tickEle.setStyle(tickStyles.selectedStyle);
+                }).on('selected',(e) => {
                     tickEle.setStyle(tickStyles.selectedStyle);
-            }).on('selected',(e) => {
-                tickEle.setStyle(tickStyles.selectedStyle);
-            })
-
-            me.container.appendChild(tickEle.elem);
-
-            let tickX = me._positionTickLabel(tickEle.elem, tickValue, tickData[i],i);
-            me.tickLabels.push(tickEle.elem);
-        });
-        
-        const heightProperty = this.orientation == 'horizontal' ? 'height' : 'width';
-        const heightElement = this.tickLabels.length > 0 ? this.tickLabels[0].getBoundingClientRect()[heightProperty] : this.handle.getBoundingClientRect()[heightProperty];
-        
-        const containerPadding = (heightElement / 2) - (ui.progressThickness / 2);
-
-        return this;
+                })
+    
+                me.container.appendChild(tickEle.elem);
+    
+                let tickX = me._positionTickLabel(tickEle.elem, tickValue, tickData[i],i);
+                me.tickLabels.push(tickEle.elem);
+                
+                
+            });
+            
+            const heightProperty = this.orientation == 'horizontal' ? 'height' : 'width';
+            const heightElement = this.tickLabels.length > 0 ? this.tickLabels[0].getBoundingClientRect()[heightProperty] : this.handle.getBoundingClientRect()[heightProperty];
+            
+            const containerPadding = (heightElement / 2) - (ui.progressThickness / 2);
+    
+            res(this);
+        })
     }
 
     _positionTickLabel(tickEle, tickValue, tickData, tickIndex) {
@@ -576,9 +614,11 @@ export class SliderUI {
             var _tickClick = (e) => {
                 if (e.which && e.which != 13) return;
                 this.tickLabels.forEach((elem) => elem.dispatchEvent(deselectedEvent));
+                
                 me._updateTicks(tickValue)
-                  ._updateValue(this._wbnValToProgVal(tickValue),tickValue)
-                  ._updateBindings();
+                  .then(() => this._updateValue(this._wbnValToProgVal(tickValue),tickValue))
+                  .then(() => this._updateBindings());
+                
                 tickEle.classList.add('wbn_selected');
                 tickEle.dispatchEvent(selectedEvent);
                 tickLabels.onTick(tickValue,tickData,tickEle,tickIndex,this.slider);
@@ -603,11 +643,15 @@ export class SliderUI {
         return tickFinalPos;
     }
     
-    _updateTicks(val) {
-        const selectedEvent = new CustomEvent('selected');
-        const deselectedEvent = new CustomEvent('deselected');
-        this.tickLabels.concat(this.tickMarks).forEach((tick) => { (tick.getAttribute('wbn-value') == val) ? [tick.classList.add('wbn_selected'),tick.dispatchEvent(selectedEvent)] : [tick.classList.remove('wbn_selected'),tick.dispatchEvent(deselectedEvent)] });
-        return this;
+    async _updateTicks(val) {
+        const ticksUpdated = new Promise((res,rej) => {
+            const selectedEvent = new CustomEvent('selected');
+            const deselectedEvent = new CustomEvent('deselected');
+            this.tickLabels.concat(this.tickMarks).forEach((tick) => { (tick.getAttribute('wbn-value') == val) ? [tick.classList.add('wbn_selected'),tick.dispatchEvent(selectedEvent)] : [tick.classList.remove('wbn_selected'),tick.dispatchEvent(deselectedEvent)] });
+            res(this);
+        });
+        
+        return await ticksUpdated;
     }
     
     _createCaps() {
@@ -926,13 +970,14 @@ export class SliderUI {
     }
 
     _updateValue(val, wbnVal) {
-        this.slider._updateValue(val, wbnVal);
-        return this;
+        return new Promise((res,rej) => {
+            this.slider._updateValue(val, wbnVal)
+            res(this);
+        });
     }
 
     _updateBindings() {
-        this.slider._updateBindings();
-        return this;
+        return this.slider._updateBindings();
     }
     
     _progValToWbnVal(progVal): number {
@@ -957,34 +1002,37 @@ export class SliderUI {
     }
     
     _updateProgress(e: any, tickPos?: number) {
-        const ui = this.UI();
-        const progressElem = this.progressElem;
-
-        if (!this.progressDrag && !tickPos && e.touches === undefined) return
-        const posProperty = this.vertical ? 'clientY' : 'clientX';
-        const clientPos = e ? e[posProperty] || e.touches[0][posProperty] : tickPos;
         
-        const progressVal = {
-            'right':(clientPos - (this.vertical ? ui.progressTop : ui.progressLeft)) / ui.progressLength * 100,
-            'left':((this.vertical ? ui.progressBottom : ui.progressRight) - clientPos) / ui.progressLength * 100
-        }
-        
-        var wbnVal = this._progValToWbnVal(progressVal[ui.directionAlias]);
-        var newVal;
-
-        const steps = this.steps;
-        if (steps.length) {
-            wbnVal = this._wbnValToStep(wbnVal);
-            newVal = this._wbnValToProgVal(wbnVal);
-        } else {
-            newVal = progressVal;
-        }
-
-        this._updateValue(newVal, wbnVal)
-            ._updateHandle(newVal)
-            ._updateBindings()
-            ._refreshUI();
-        return this;
+        return new Promise((res,rej) => {
+            const ui = this.UI();
+            const progressElem = this.progressElem;
+    
+            if (!this.progressDrag && !tickPos && e.touches === undefined) return
+            const posProperty = this.vertical ? 'clientY' : 'clientX';
+            const clientPos = e ? e[posProperty] || e.touches[0][posProperty] : tickPos;
+            
+            const progressVal = {
+                'right':(clientPos - (this.vertical ? ui.progressTop : ui.progressLeft)) / ui.progressLength * 100,
+                'left':((this.vertical ? ui.progressBottom : ui.progressRight) - clientPos) / ui.progressLength * 100
+            }
+            
+            var wbnVal = this._progValToWbnVal(progressVal[ui.directionAlias]);
+            var newVal;
+    
+            const steps = this.steps;
+            if (steps.length) {
+                wbnVal = this._wbnValToStep(wbnVal);
+                newVal = this._wbnValToProgVal(wbnVal);
+            } else {
+                newVal = progressVal;
+            }
+    
+            this._updateValue(newVal, wbnVal)
+                .then(() => { this._updateHandle(newVal) })
+                .then(() => { this._updateBindings() })
+                .then(() => { this._refreshUI(); })
+            return this;
+        });
        
     }
 

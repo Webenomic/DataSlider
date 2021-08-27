@@ -18,12 +18,16 @@ class Slider {
     constructor(parent: any,options: Options) {
         this.parent = parent;
         this.config = new Config(parent, options);
-        this.ui     = new SliderUI(parent, options, this);
+        
+        this.wbnBindScope = {};
         this.bindVarName = this.config.dataBinding.property;
         this.bindVarScope = this.config.dataBinding.scope;
-        this.wbnBindScope = {};
-        this._createProxy();
-        this.config.onReady(this);
+        
+        this.ui     = new SliderUI(parent, options, this);
+        this.ui.uiCreated.then(() => {
+            this._createProxy();
+            this.config.onReady(this);
+        });
     }
     
     reset(val?: number) {
@@ -41,8 +45,8 @@ class Slider {
         const scope = this.config.dataBinding.scope;
         window.wbnScope = new Proxy(me.wbnBindScope, {
             set(target,prop,val) {
-                me._updateValue(me._wbnValToProgVal(val),val);
-                me._updateBindings();
+                me._updateValue(me._wbnValToProgVal(val),val)
+                    .then(() => { me._updateBindings(); });
                 return true;
             },
             get(target,prop) {
@@ -54,9 +58,10 @@ class Slider {
         
         const initialValue = this.config.defaultValue;
         const initialProgValue = this._wbnValToProgVal(initialValue);
-        this.ui.progressElem.value = initialProgValue.toString();
-        this.ui._updateHandle(initialProgValue); 
-        this.ui._updateTicks(initialValue);
+        this.update(initialValue);
+        /*this.ui.progressElem.value = initialProgValue.toString();
+        this.ui._updateHandle(initialProgValue);
+        this.ui._updateTicks(initialValue);*/
     }
     
     loading(isLoading) {
@@ -66,9 +71,8 @@ class Slider {
     }
     
     update(val) {
-        this._updateValue(this._wbnValToProgVal(val),val);
-        this._updateBindings();
-        return this;
+        return this._updateValue(this._wbnValToProgVal(val),val)
+            .then(() => { this._updateBindings(); });
     }
     
     _wbnValToProgVal(wbnVal) {
@@ -78,24 +82,28 @@ class Slider {
     }
     
     _updateValue(val,wbnVal) {
-        if (!isFinite(val)) return;
-        const min = this.config.range.min;
-        const max = this.config.range.max;
-        if (wbnVal < min || wbnVal > max) return;
-        const decimals = this.config.range.decimals;
-        __wbn$(this.ui.progressElem)
-            .setVal(Math.round(val))
-            .setAttr('wbn-value',Number(wbnVal).toFixed(decimals));
         
-        //if (this.bindVarScope.wbnScope[this.bindVarName] != wbnVal) {
-            this.wbnBindScope[this.bindVarName] = wbnVal;
-        //}
+        return new Promise((res,rej) => {
+            if (!isFinite(val) || !wbnVal) rej(val);
+            const min = this.config.range.min;
+            const max = this.config.range.max;
+            if (wbnVal < min || wbnVal > max) return;
+            const decimals = this.config.range.decimals;
+            __wbn$(this.ui.progressElem)
+                .setVal(Math.round(val))
+                .setAttr('wbn-value',Number(wbnVal).toFixed(decimals));
+            //if (this.bindVarScope.wbnScope[this.bindVarName] != wbnVal) {
+                this.wbnBindScope[this.bindVarName] = wbnVal;
+            //}
+            
+            this.value = wbnVal;
+            res(this);
         
-        this.value = wbnVal;
-        return this;
+        });
     }
     
     _updateBindings(skipEvent?: boolean | false) {
+
         const min = this.config.range.min;
         const max = this.config.range.max;
         const varName = this.bindVarName;
@@ -109,10 +117,13 @@ class Slider {
             var finalVal = (transform) ? transform(val) : newVal;
             ele.tagName == 'INPUT' ? ele.value = finalVal : ele.innerHTML = finalVal;
         });
-        this.ui._updateTicks(val);
-        this.ui._updateHandle(this._wbnValToProgVal(val));
-        this.ui._assignAttributes();
+        
+        const ui = this.ui;
+        ui._updateTicks(val);
+        ui._updateHandle(this._wbnValToProgVal(val));
+        ui._assignAttributes();
         this.config.onUpdate(this);
+        
         return this;
     }
   
