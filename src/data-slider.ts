@@ -30,6 +30,8 @@ class Slider {
         });
     }
     
+   
+
     reset(val?: number) {
         this.ui._destroy();
         this.ui = new SliderUI(this.parent, this.config, this);
@@ -84,7 +86,7 @@ class Slider {
     _updateValue(val,wbnVal) {
         
         return new Promise((res,rej) => {
-            if (!isFinite(val) || !wbnVal) rej(val);
+            if (!isFinite(val)) val = Number(val);
             const min = this.config.range.min;
             const max = this.config.range.max;
             if (wbnVal < min || wbnVal > max) return;
@@ -98,12 +100,10 @@ class Slider {
             
             this.value = wbnVal;
             res(this);
-        
         });
     }
     
-    _updateBindings(skipEvent?: boolean | false) {
-
+    _updateBindings(skipUpdate?:boolean | false) {
         const min = this.config.range.min;
         const max = this.config.range.max;
         const varName = this.bindVarName;
@@ -118,11 +118,13 @@ class Slider {
             ele.tagName == 'INPUT' ? ele.value = finalVal : ele.innerHTML = finalVal;
         });
         
-        const ui = this.ui;
-        ui._updateTicks(val);
-        ui._updateHandle(this._wbnValToProgVal(val));
-        ui._assignAttributes();
-        this.config.onUpdate(this);
+        const ui = this.ui; 
+        if (ui.uiReady) {
+            ui._updateTicks(val);
+            ui._updateHandle(this._wbnValToProgVal(val));
+            ui._assignAttributes();
+            if (!skipUpdate) this.config.onUpdate(this,val);
+        }
         
         return this;
     }

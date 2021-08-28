@@ -1,18 +1,24 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="../dist/data-slider.min.js"></script>
+<script src="../dist/data-slider.js"></script>
 <link rel="stylesheet" href="../dist/data-slider.css"></link>
 <style type="text/css">
 body,html {
     font-family:arial;
     font-size:14px;
+    padding:20px;
 }
-
+.slider {
+    width:50%;
+    padding:10px;
+    display:block;
+    height:20px;
+}
 </style>
 </head>
 <body>
-<div id="sliderDiv" style="width:50%;min-height:400px;margin:50px;height:40%;float:left;margin-right:50px;border:1px solid #000;padding:30px;"></div>
+<div id="sliderDiv" style="width:50%;min-height:20px;margin:50px;height:200px;margin-right:50px;border:1px solid #000;padding:30px;"></div>
 
 <a href="javascript:resize()">Refresh</a><br><br>
 
@@ -34,7 +40,9 @@ Slider Direction:
 <br><br>
 Slider Bar Thickness: <input type="range" onInput="slider.config.bar.thickness = this.value;slider.ui.update();" min="1" max="20" step="1"><br>
 
-Handle Height: <input type="range" onInput="slider.config.handle.height = this.value;slider.ui.update();" min="1" max="80" step="1"><br>
+Handle Height: <div class="slider" min="1" max="80" step="1"></div>
+<input type="number" wbn-bind="blah"><br>
+
 Handle Width: <input type="range" onInput="slider.config.handle.width = this.value;slider.ui.update();" min="1" max="80" step="1"><br>
 Handle Radius: <input type="range" onInput="slider.config.handle.borderRadius = this.value;slider.ui.update();" min="0" max="80" step="1"><br>
 Handle Position: <input type="range" onInput="slider.config.handle.position = Number(this.value);slider.ui.update();" min="-30" max="30" step="1"><br>
@@ -52,27 +60,24 @@ Max: <input type="range" onInput="updateMax(Number(this.value))" value="2" min="
 <script>
 
 
-foo=50;
+foo=null;
 
 var t1 = (val) => {return Number(val).toFixed(2) }; 
 var t2 = (val) => {return val+'***'}; 
 
 var options = (boundVar) => { 
 	return {
-		orientation:'horizontal',
-		bar: {
-			thickness:5,
-	        borderRadius:10,
-		},
-		defaultValue:foo,
-		
-		responsive:true,
+		defaultValue:10,
 		range:{
-		    min:-10,
+		    min:0,
 		    max:100,
 		    decimals:2,
 		    step:1
 		},
+		orientation:'vertical',
+
+        
+        responsive:true,
 		ribbon: {
 			show:true,
 			color:(slider) => { return 'rgb(' + (slider.value+50)*5 + ',100,50)'; },
@@ -83,8 +88,8 @@ var options = (boundVar) => {
 			marks: [
 				{
 					range:{
-                        step:5,
-                        min:-10,
+                        step:1,
+                        min:0,
                         max:100
                     },
                     height:20,
@@ -98,15 +103,16 @@ var options = (boundVar) => {
                     	return {
                    		   backgroundColor: '#999',
                    		   width:'20px',
-                           height:'20px',
-                           margin:'0px 0px'
+                           height:'1px',
+                           //margin:'0px 0px'
                     	}
                     },
+                    /*
                     hoverStyle: {
                     	backgroundColor: 'blue',
                         width:'20px',
                         height:'20px',
-                        margin:'0px 0px'
+                        //margin:'0px 0px'
                     },
                     selectedStyle: {
                     	backgroundColor: '#990000',
@@ -114,16 +120,17 @@ var options = (boundVar) => {
                     	height:'22px',
                     	margin:'-1px -1px'
                     }
+                    */
                 }
 			],
 			
 			labels: {
-			    data:[-10,10,20,30,40].map((tick,i) => {
+			    data:[-12,10,20,30,40,80,120].map((tick,i) => {
 			           return { 
 			               value: tick, 
 			               label: {
-			            	 text: (val,i) => { return val + 'x'; },
-			            	 style: (val) => { 
+			            	 text: (slider,val,i) => { return val + 'x'; },
+			            	 style: (slider,val) => { 
 			            		 return { 
 			            			 fontSize : '14px',
 			            			 color:'#fff',
@@ -180,7 +187,7 @@ var options = (boundVar) => {
 				return val;
 			},
 			height:(slider,val) => {
-                return val;
+                return 20;
             },
             borderRadius:(slider,val) => {
                 return val;
@@ -232,8 +239,86 @@ var options = (boundVar) => {
 }
 
 //var sliders = [];
+var slider;
 
-var slider = new DataSlider(document.getElementById('sliderDiv'),options('foo'));
+window.onload = () => {
+
+
+	Array.from(document.getElementsByClassName('slider')).forEach((ele) => {
+	   const [min,max,step] = ['min','max','step'].map((prop) => { return Number(ele.getAttribute(prop)); });
+	   var fooBoo = new DataSlider(ele,{
+		   bar: {
+			   borderRadius:10
+		   },
+		   ribbon: {
+			   color:'#e4a114',
+			   hoverColor:'#990000'
+		   },
+		   ticks: {
+			   marks: [{
+				   range: {
+					   min:1,
+					   max:80,
+					   step:1
+				   },
+				   position:10,
+				   height:10,
+				   width:1
+			   }],
+			   labels: {
+				   show:true,
+				   data: [{
+					   value:20,
+					   label:{
+						   text:(slider,val) => {
+	                           return val;
+	                       }
+					   }
+				   }],
+				   position:20
+			   }
+		   },
+		   range: {
+			   min:min,
+			   max:max,
+			   step:step
+		   },
+		   handle: {
+			   color:'#e4a114',
+               hoverColor:'#990000',
+			   width:2,
+			   height:50,
+			   position:-10,
+			   borderRadius:10,
+			   label: {
+				   text: (slider,val) => {
+					   return `${val}px`;
+				   },
+				   style: {
+					   fontWeight:'bold',
+					   color:'#ffffff',
+					   padding:'4px'
+				   },
+				   position:-20
+			   }
+		   },
+		   tooltips: {
+			   show: false
+		   },
+		   dataBinding: {
+			   property:'blah'
+		   },
+
+		   onUpdate: (thisSlider,val) => {
+			   slider.config.handle.height = val;
+			   slider.ui.update();
+		   }
+	   });
+
+	});
+	slider = new DataSlider(document.getElementById('sliderDiv'),options('foo'));
+
+};
 
 document.addEventListener('keydown',(e) => {
     var sliderRange = slider.config.range.step;

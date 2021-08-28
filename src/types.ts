@@ -73,7 +73,8 @@ export interface TickMark extends Stylable {
     range: Range,
     position: number | Function,
     hoverStyle: object | Function | undefined,
-    activeStyle: object | Function | undefined
+    activeStyle: object | Function | undefined,
+    selectedStyle: object | Function | undefined
 }
 
 export interface Ticks {
@@ -103,7 +104,7 @@ export interface Caps {
 export interface DataBinding {
     scope: any,
     property: any | undefined,
-    transform: Function
+    transform: Function | undefined
 }
 
 export type Direction = 'right' | 'left' | 'up' | 'down';

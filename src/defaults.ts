@@ -24,16 +24,17 @@ export class Defaults {
         };
         
         Object.assign(config, {
-            orientation: config.orientation || 'horizontal',
-            direction: config.direction || (config.orientation === 'vertical' ? 'up' : 'right'),
+            orientation: config?.orientation || 'horizontal',
+            direction: config?.direction || (config.orientation === 'vertical' ? 'up' : 'right'),
             bar: {
-                thickness: config.bar.thickness || 10,
-                backgroundColor: config.bar.backgroundColor || null,
-                hoverColor: config.bar.hoverColor || null,
-                className: config.bar.className || CSSNamespace + 'slider',
+                thickness: config.bar?.thickness || 10,
+                backgroundColor: config.bar?.backgroundColor || '#000000',
+                hoverColor: config.bar?.hoverColor || '#909090',
+                className: config.bar?.className || CSSNamespace + 'slider',
+                borderRadius: config.bar?.borderRadius !== undefined ? config.bar?.borderRadius : 10
             },
-            responsive: config.responsive !== undefined ? config.responsive : true,
-            defaultValue: config.defaultValue || window[container.getAttribute('wbn-bind') || ''] || 0,
+            responsive: config?.responsive !== undefined ? config.responsive : true,
+            defaultValue: config?.defaultValue || window[container.getAttribute('wbn-bind') || ''] || config.range?.min  || 0,
             range: {
                 min: config.range?.min !== undefined ? config.range?.min : 0,
                 max: config.range?.max !== undefined ? config.range?.max : 100,
@@ -45,21 +46,21 @@ export class Defaults {
                 width: config.handle?.width || null,
                 height: config.handle?.height || null,
                 borderRadius: config.handle?.borderRadius || null,
-                color: config.handle?.color || config.ribbon?.color || null,
+                color: config.handle?.color || config.ribbon?.color || '#ccc',
                 style: config.handle?.style || null,
-                hoverColor: config.handle?.hoverColor || config.handle?.color || null,
+                hoverColor: config.handle?.hoverColor || config.handle?.color || '#c0c0c0',
                 position: config.handle?.position || 0,
                 className:config.handle?.className || null,
                 label: config.handle?.label || null
             },
             ribbon: {
                 show: config.ribbon?.show !== undefined ? config.ribbon?.show : true,
-                color: config.ribbon?.color || null,
-                hoverColor: config.ribbon?.hoverColor || config.ribbon?.color || null,
+                color: config.ribbon?.color || '#ccc',
+                hoverColor: config.ribbon?.hoverColor || config.ribbon?.color || '#c0c0c0',
             },
             tooltips: {
                 show: config.tooltips?.show !== undefined ? config.tooltips?.show : true,
-                position:config.tooltips?.position,
+                position:config.tooltips?.position || -15,
                 label: {
                     text:config.tooltips?.label?.text || null,
                     style:config.tooltips?.label?.style || null
@@ -80,7 +81,7 @@ export class Defaults {
                     style:config.ticks?.labels?.style || null,
                     hoverStyle:config.ticks?.labels?.hoverStyle || null,
                     selectedStyle:config.ticks?.labels?.selectedStyle || null,
-                    snap: config.ticks?.labels?.snap !== undefined ? config.ticks?.labels?.snap : true,
+                    snap: config.ticks?.labels?.snap !== undefined ? config.ticks?.labels?.snap : false,
                     labelsClickable:config.ticks?.labels?.labelsClickable !== undefined ? config.ticks.labels?.labelsClickable : true,
                     position:config.ticks?.labels?.position,
                     onTick: config.ticks?.labels?.onTick || blankCallback,

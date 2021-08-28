@@ -28,6 +28,7 @@
         --ribbon-color: @mango; 
         --background-color:@dark;
         --handle-color: @mango;
+        --border-radius: '10px';
         
         -webkit-appearance: none;
         -moz-appearance: none;
@@ -35,6 +36,7 @@
         width: inherit;
         position: relative;
         background: var(--background-color);
+        clip-path:inset(0% round var(--border-radius));
         min-width: 100px;
         width: 100%;
         border:none;
@@ -46,7 +48,7 @@
         
         
         &::-webkit-progress-bar {
-            background: var(--background-color);
+          background: var(--background-color);
         }
     
         &::-webkit-progress-value {
@@ -163,8 +165,9 @@
         
         --hover-ribbon-color: @mango;
         --hover-handle-color: @mango;
+        --handle-color: @mango;
         
-        &:hover,&:active,&:focus {
+        &:hover,&:active {
             > @{slider-namespace-prefix}slider::-webkit-progress-value {
                 background: var( --hover-ribbon-color);
             } 
