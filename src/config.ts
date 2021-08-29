@@ -4,14 +4,14 @@ import { Options, CSSNamespace} from './types';
 export class Config extends Defaults {
     
     constructor(container: any,config: Options) {
-
-        const min = config.range.min;
-        const max = config.range.max;
+        
+        const {min,max} = config.range;
+        
         //insure range is range
         if (min == max || min > max) console.error(`Range ${min}-${max} does not specify a min value lower than max.`);
         
         //insure default value within range
-        const _clamp = (val) => { return [val,config.range.min,config.range.max]; }
+        const _clamp = (val) => { return [val,min,max]; }
         
         config.defaultValue = ((...args) => {
             const [val,min,max] = args; 

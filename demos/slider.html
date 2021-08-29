@@ -18,7 +18,7 @@ body,html {
 </style>
 </head>
 <body>
-<div id="sliderDiv" style="width:50%;min-height:20px;margin:50px;height:200px;margin-right:50px;border:1px solid #000;padding:30px;"></div>
+<div id="sliderDiv" style="width:50%;min-height:20px;margin:50px;height:300px;margin-right:50px;border:1px solid #000;padding:30px;"></div>
 
 <a href="javascript:resize()">Refresh</a><br><br>
 
@@ -35,7 +35,7 @@ Slider Direction:
 <input type="radio" name="direction[]" value="left" onClick="switchConfig('left','direction')">Left 
 
 <input type="radio" name="direction[]" value="up" onClick="switchConfig('up','direction')" checked>Up
-<input type="radio" name="direction[]" value="down" onClick="switchConfig('vertical','orientation');switchConfig('down','direction');">Down 
+<input type="radio" name="direction[]" value="down" onClick="switchConfig('down','direction');">Down 
 
 <br><br>
 Slider Bar Thickness: <input type="range" onInput="slider.config.bar.thickness = this.value;slider.ui.update();" min="1" max="20" step="1"><br>
@@ -125,7 +125,7 @@ var options = (boundVar) => {
 			],
 			
 			labels: {
-			    data:[-12,10,20,30,40,80,120].map((tick,i) => {
+			    data:[10,20,30,40,80].map((tick,i) => {
 			           return { 
 			               value: tick, 
 			               label: {
@@ -240,10 +240,10 @@ var options = (boundVar) => {
 
 //var sliders = [];
 var slider;
-
+var updateTimeout;
 window.onload = () => {
-
-
+    
+    slider = new DataSlider(document.getElementById('sliderDiv'),options('foo'));
 	Array.from(document.getElementsByClassName('slider')).forEach((ele) => {
 	   const [min,max,step] = ['min','max','step'].map((prop) => { return Number(ele.getAttribute(prop)); });
 	   var fooBoo = new DataSlider(ele,{
@@ -311,12 +311,12 @@ window.onload = () => {
 
 		   onUpdate: (thisSlider,val) => {
 			   slider.config.handle.height = val;
-			   slider.ui.update();
+			   slider.ui.update()
 		   }
 	   });
 
 	});
-	slider = new DataSlider(document.getElementById('sliderDiv'),options('foo'));
+
 
 };
 
