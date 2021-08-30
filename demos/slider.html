@@ -74,7 +74,7 @@ var options = (boundVar) => {
 		    decimals:2,
 		    step:1
 		},
-		orientation:'horizontal',
+		orientation:'vertical',
 
         
         responsive:true,
@@ -88,16 +88,15 @@ var options = (boundVar) => {
 			marks: [
 				{
 					range:{
-                        step:1,
-                        min:0,
-                        max:100
+                        step:4,
+                        min:4,
+                        max:96
                     },
                     height:1,
                     width:20,
                     borderRadius:16,
                     position:(slider,tickVal) => {
-
-                        return tickVal % 15 ? 25 : -25;	
+                        return 0;	
                     },
                     color:'#990000',
                     style: (slider,val) => {
@@ -107,20 +106,18 @@ var options = (boundVar) => {
                            //margin:'0px 0px'
                     	}
                     },
-                    /*
+                    
                     hoverStyle: {
                     	backgroundColor: 'blue',
-                        width:'20px',
-                        height:'20px',
+                      
                         //margin:'0px 0px'
                     },
                     selectedStyle: {
                     	backgroundColor: '#990000',
-                    	width:'22px',
-                    	height:'22px',
-                    	margin:'-1px -1px'
+                    
+                    	//margin:'-1px -1px'
                     }
-                    */
+                    
                 }
 			],
 			
@@ -155,7 +152,6 @@ var options = (boundVar) => {
 			    snap:false,
 			    labelsClickable: true,
 			    position:(slider,tickVal) => {
-			    	console.log( tickVal % 15 ? -20 : 20);
 			    	return tickVal % 15 ? -20 : 20;
 			    }
 			}
@@ -181,14 +177,14 @@ var options = (boundVar) => {
 				    fontWeight:'bold',
 				}
 			},
-			position:-20
+			position:0
 		},
 		handle: {
 			width:(slider,val) => {
-				return val;
+				return 100;
 			},
 			height:(slider,val) => {
-                return 20;
+                return 1;
             },
             borderRadius:(slider,val) => {
                 return val;
@@ -196,7 +192,8 @@ var options = (boundVar) => {
 		    show:true,
 		    style:(slider,val) => {
 		    	return {
-		    	    backgroundColor:(val % 5) ? '#00627c' : '#e4a114'	
+		    	    backgroundColor:(val % 4) ? '#00627c' : '#e4a114',
+	
 		    	}
 		    },
 		    label: {
@@ -211,7 +208,7 @@ var options = (boundVar) => {
 		    		  return val;
 		    	  },
 		    	  position:(slider,val) => {
-		             return 0;
+		             return 20;
 		          }
 		    },
 		    position:0
@@ -220,9 +217,6 @@ var options = (boundVar) => {
 			startCap: {
 				label: {
 					text:'Foo'
-				},
-				style: {
-					padding:'4px'
 				}
 			},
 			endCap: {
@@ -248,6 +242,7 @@ window.onload = () => {
 	Array.from(document.getElementsByClassName('slider')).forEach((ele) => {
 	   const [min,max,step] = ['min','max','step'].map((prop) => { return Number(ele.getAttribute(prop)); });
 	   var fooBoo = new DataSlider(ele,{
+
 		   bar: {
 			   borderRadius:10,
 			   thickness:10
@@ -322,7 +317,8 @@ window.onload = () => {
 			   }
 		   },
 		   tooltips: {
-			   show: true
+			   show: true,
+			   position:0
 		   },
 		   dataBinding: {
 			   property:'blah'
@@ -331,7 +327,25 @@ window.onload = () => {
 		   onUpdate: (thisSlider,val) => {
 			   slider.config.handle.height = val;
 			   slider.ui.update();
-		   }
+		   },
+		   caps: {
+	            startCap: {
+	                label: {
+	                    text:'Foo123123',
+	                    
+	                },
+	                
+	                
+	            },
+	            endCap: {
+	                label: {
+	                    text:'123sBar'
+	                }
+	            },
+	            style: {
+                    padding:'10px'
+                }
+	        },
 	   });
 
 	});
@@ -367,7 +381,6 @@ function updateMin(minValue) {
 	let config = slider.config;
 	config.defaultValue = currentValue;
     config.range.min = minValue;
-    console.log(config.ticks.data);
     slider.reset(slider.value);
 
 }

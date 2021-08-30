@@ -60,7 +60,7 @@ export class Defaults {
             },
             tooltips: {
                 show: config.tooltips?.show !== undefined ? config.tooltips?.show : true,
-                position:config.tooltips?.position || -15,
+                position:config.tooltips?.position || 0,
                 label: {
                     text:config.tooltips?.label?.text || null,
                     style:config.tooltips?.label?.style || null

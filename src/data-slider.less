@@ -111,9 +111,6 @@
     }
     
     &tooltip {
-        display:flex;
-        justify-content: center;
-        align-items:center;
         position:absolute;
         background:@dark;
         text-align: center;
@@ -123,7 +120,7 @@
         border-radius:2px;
         z-Index:3040;
     }
-
+    
     &tick_label {
         position: absolute; 
         color: @dark;
@@ -145,9 +142,8 @@
         &.clickable {
             cursor:pointer;
         }
-
     }
-    
+
     &tick_mark {
         position: absolute; 
         background-color: @dark;
@@ -155,12 +151,12 @@
         width:1px;
         z-Index:3020;
     }
-    
+
     &cap {
         position:absolute;
-        
+        padding:4px;
     }
-    
+
     &container {
         
         --hover-ribbon-color: @mango;
