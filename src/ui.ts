@@ -507,7 +507,7 @@ export class SliderUI {
             const markPoints = this._tickPoint(markEle, markValue, markPosition);
              
             markEle.style[vertical ? 'left' : 'top'] = markPoints[1];
-            markEle.style[positionProperty] = markPoints[0] + (vertical ? progressThickness/2 : 0);
+            markEle.style[positionProperty] = markPoints[0];
             
             //re-register selected state, if present
             if (markValue == slider.value) markEle.dispatchEvent(selectedEvent);
@@ -585,9 +585,10 @@ export class SliderUI {
     _tickPoint(ele: Element,val: number,position: number) {
         const { vertical, progressElem, config: { range: { min, max } } } = this;
         const { progressLength, progressOffset, directionAlias, progressThickness, positionOffsetProperty } = this.UI();
+        const shim = vertical ? progressThickness/2 : 0;
         const tickPointsX = {
-            'right': (val - min) * progressLength / (max - min) + progressOffset,
-            'left': (max - val) * progressLength / (max - min) + progressOffset
+            'right': ((val - min) * progressLength / (max - min) + progressOffset) + shim,
+            'left': ((max - val) * progressLength / (max - min) + progressOffset) + shim
         };
         const tickThickness = ele.rect()[this.vertical ? 'height' : 'width'];
         const tickLength    = ele.rect()[this.vertical ? 'width' : 'height'];
@@ -601,11 +602,12 @@ export class SliderUI {
     
     _centerPoint(ele: Element,val: number,position: number) {
          const {progressLength,progressOffset,directionAlias,progressThickness} = this.UI();
+         const shim = this.vertical ? (progressThickness/2) : 0;
          const eleWidth = ele.rect()[this.vertical ? 'height' : 'width'];
          const eleHeight = ele.rect()[this.vertical ? 'width' : 'height']
          const xPoints = {
-             'right':progressOffset - eleWidth/2 + this._clamp(val / 100, 0, 1) * progressLength,
-             'left':(progressOffset + progressLength) - eleWidth/2 - this._clamp(val / 100, 0, 1) * progressLength,
+             'right':(progressOffset - eleWidth/2 + this._clamp(val / 100, 0, 1) * progressLength) + shim,
+             'left':((progressOffset + progressLength) - eleWidth/2 - this._clamp(val / 100, 0, 1) * progressLength) + shim,
          }
          const yPoint = {
              'top': xPoints[directionAlias] + progressThickness/2 - eleHeight/2 + position
@@ -815,11 +817,10 @@ export class SliderUI {
     
     _updateHandle(val: number) {
         return new Promise((res) => {
-            const { progressThickness } = this.UI();
             const {handle,vertical,config,slider} = this;
             this._positionHandle();
             const [handlePtX,handlePtY] = this._centerPoint(handle,val,this._valOrFunc(config.handle.position,[slider,slider.value],0));
-            __wbn$(handle).setStyle(vertical ? { 'top' : handlePtX + (progressThickness/2) } : { 'left' : handlePtX });
+            __wbn$(handle).setStyle(vertical ? { 'top' : handlePtX } : { 'left' : handlePtX });
             
             const { handleLabel,  config: { handle: { label: labelConfig }}} = this;
             if ( labelConfig ) {
