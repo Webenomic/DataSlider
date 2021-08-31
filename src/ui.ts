@@ -277,7 +277,7 @@ export class SliderUI {
         });
     }
     
-    /* create array of values according to range steps */
+    /** create array of values according to range steps */
     _createSteps() {
         return new Promise((res) => {
             
