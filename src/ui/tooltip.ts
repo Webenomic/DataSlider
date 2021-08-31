@@ -19,6 +19,7 @@ export class Tooltip {
         if (this.config.tooltips.show === false) return this;
         
         const { container, progressDrag, vertical, tickLabels, config: { tooltips: tooltipConfig, ticks: { labels: { data: labelData }}}} = this.ui;
+        const supportsTouch = window.supportsTouch();
         const _tooltip = __wbn$().create('div',true)
                                  .setClass(`${CSSNamespace}tooltip`)
                                  .setStyle({display:'none'})
@@ -33,7 +34,6 @@ export class Tooltip {
             __wbn$(tickEle).on('mouseover',(e: MouseEvent) => { 
                 this.ui.tickOn = i;
                 this.ui.tickVal = labelData ? labelData[i].value : null;
-                //if (tooltipConfig.ticks.show) this._positionTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
             }).on('mouseout',() => { 
                 this.ui.tickVal = null;
                 this.ui.tickOn = null; 
@@ -41,7 +41,7 @@ export class Tooltip {
         });
         
         [container,document].forEach((elem) => {
-            __wbn$(elem).on(['touchmove','touchstart','mouseover','mousemove'],(e: any) => {
+            __wbn$(elem).on(supportsTouch ? ['touchmove','touchstart'] : ['mouseover','mousemove'],(e: any) => {
                 if (this.ui.tickOn && !tooltipConfig.ticks.show) return;
                 if (progressDrag || e.currentTarget == container) this._positionTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.ui.tickOn, this.ui.tickVal);
             }).on(['touchend','mouseup','mouseout'],() => {
@@ -93,11 +93,11 @@ export class Tooltip {
         const tooltipTop = progressElem[positionOffsetProperty] + (vertical ? 0 : progressThickness/2) - (_tooltip.rect()[vertical ? 'width' : 'height']/2) + tooltipPosition;
 
         const _finalStyle = vertical ? {
-            top: tooltipPoint,
-            left: tooltipTop
+            top: `${tooltipPoint}px`,
+            left: `${tooltipTop}px`
         } : {
-            left: tooltipPoint,
-            top: tooltipTop
+            left: `${tooltipPoint}px`,
+            top: `${tooltipTop}px`
         }
 
         Object.assign(_tooltip.style,_finalStyle);

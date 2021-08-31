@@ -52,7 +52,7 @@ export class TickMarks {
                         .setClass(`${CSSNamespace}tick_mark`)
                         .setAttr('wbn-value', markValue)
                         .setStyle({
-                            height: markSet.height,
+                            height: `${markSet.height}px`,
                             width: `${markSet.width}px`,
                             borderRadius: `${markSet.borderRadius}px`,
                             backgroundColor: markSet.color
@@ -105,9 +105,10 @@ export class TickMarks {
                 markEle.dispatchEvent(deselectedEvent);
             const markPosition = _valOrFunc(markEle.position,[slider, markValue],0);
             const markPoints = this.ui._tickPoint(markEle, markValue, markPosition);
-             
-            markEle.style[vertical ? 'left' : 'top'] = markPoints[1];
-            markEle.style[positionProperty] = markPoints[0];
+            
+            
+            markEle.style[vertical ? 'left' : 'top'] = `${markPoints[1]}px`;
+            markEle.style[positionProperty] = `${markPoints[0]}px`;
             
             //re-register selected state, if present
             if (markValue == slider.value) markEle.dispatchEvent(selectedEvent);

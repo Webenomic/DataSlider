@@ -17,8 +17,13 @@ declare global {
         hide(): void;
         show(): void;
     }
+    
+    interface Window {
+        supportsTouch(): number | boolean;
+    }
 }
 
+Window.prototype.supportsTouch = () => { return 'ontouchstart' in window || navigator.msMaxTouchPoints };
 HTMLElement.prototype.hide = function() { this.style.display = 'none' };
 HTMLElement.prototype.show = function() { this.style.display = 'block' };
 Element.prototype.rect = function() { return this.getBoundingClientRect(); };
@@ -200,7 +205,7 @@ export class SliderUI {
                                           .setAttr('tabindex', '0')
                                           .setStyle({
                                                 direction:directionToCSS[this.direction],
-                                                width:this.vertical ? parentHeight : 'inherit'
+                                                width:this.vertical ? `${parentHeight}px` : 'inherit'
                                           })
                                           .elem;
                                           
@@ -420,7 +425,7 @@ export class SliderUI {
         
         var endCap = this.direction == 'down' || this.direction == 'left' ? this.startCap : this.endCap;
         if (endCap) {
-            endCap.style[positionProperty] = vertical ? progressBottom : progressRight;
+            endCap.style[positionProperty] = vertical ? `${progressBottom}px` : `${progressRight}px`;
         }
         
         this._responsiveUI()._updateHandle(progressValue);
@@ -457,18 +462,21 @@ export class SliderUI {
        const capStart = (startCap ? startCap.rect()[capProp] : 0);
        const capEnd = (endCap ? endCap.rect()[capProp] : 0);
        const capTotal = capStart+capEnd;
-
+        
+       const containerHeight = parentHeight - (boundaryEnd) - (boundaryStart) - capTotal;
+       const containerWidth = parentWidth - (boundaryEnd) - (boundaryStart) - capTotal;
+       
        __wbn$(container).setStyle(vertical ? {
-           height: parentHeight - (boundaryEnd) - (boundaryStart) - capTotal,
-           marginTop: -(progressThickness/2) + boundaryStart + capStart
+           height: `${containerHeight}px`,
+           marginTop: `${-(progressThickness/2) + boundaryStart + capStart}px`
         } : {
-           width: parentWidth - (boundaryEnd) - (boundaryStart) - capTotal,
-           marginLeft: boundaryStart + capStart
+           width: `${containerWidth}px`,
+           marginLeft: `${boundaryStart + capStart}px`
         });
         
         if (vertical) {
             __wbn$(progressElem).setStyle({
-                width: parentHeight - (boundaryEnd) - (boundaryStart) - capTotal,
+                width: `${containerHeight}px`,
             }) 
         }
     }

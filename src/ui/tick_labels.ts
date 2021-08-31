@@ -89,8 +89,8 @@ export class TickLabels {
         const me = this;
         let tickPosition = _valOrFunc(tickLabels.position,[slider,tickValue,tickIndex],0);
         const tickPoints = this.ui._tickPoint(tickEle,tickValue,tickPosition);
-        tickEle.style[positionProperty] = tickPoints[0];
-        tickEle.style[vertical ? 'left' : 'top'] = tickPoints[1];
+        tickEle.style[positionProperty] = `${tickPoints[0]}px`;
+        tickEle.style[vertical ? 'left' : 'top'] = `${tickPoints[1]}px`;
         
         if (tickLabels.labelsClickable !== false) {
             __wbn$(tickEle).setAttr('tabindex','0');

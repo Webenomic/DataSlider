@@ -20,9 +20,12 @@ export class Events {
     /* create mouse/keyboard event handlers and delegate to elements, add-in callbacks */
     _assignEvents() {
         return new Promise((res) => {         
+
             
             const { slider, config, tickLabels, container, handle, progressElem, direction, config: { range: { min, max }} } = this.ui;
-            __wbn$(container).on(['mousedown','touchstart'], (e) => {
+            const supportsTouch = window.supportsTouch(); 
+            
+            __wbn$(container).on([ supportsTouch ? 'touchstart' : 'mousedown'], (e) => {
                 const { tickVal } = this.ui;
                 if (tickVal) {
                     slider.update(tickVal);
@@ -38,7 +41,7 @@ export class Events {
                 this.ui.config.onDrag(slider,slider.value);
             },{passive:false});
             
-            __wbn$(document).on(['mouseup','touchend'], (e) => { 
+            __wbn$(document).on([supportsTouch ? 'touchend' : 'mouseup'], (e) => { 
                 if(this.progressDrag) config.onDragEnd(slider,slider.value); 
                 this.progressDrag = false;
                 document.body.classList.remove(`${CSSNamespace}select_disabled`); 

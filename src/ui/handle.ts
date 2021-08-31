@@ -31,15 +31,15 @@ export class Handle {
                             _valOrFunc(handleConfig.position,[slider,slider.value],0);
 
         var handleCoreStyle = {
-            'height': handleDimension('height'),
-            'width': handleDimension('width'),
+            'height': `${handleDimension('height')}px`,
+            'width': `${handleDimension('width')}px`,
             'borderRadius': `${handleDimension('borderRadius')}px`,
         }
         
         const handleAdditionalStyle = _valOrFunc(handleConfig.style,[slider,slider.value],{});
         
         Object.assign(handleCoreStyle,handleAdditionalStyle);
-        Object.assign(handleCoreStyle,vertical ? { 'left':handlePos } : {'top':handlePos});
+        Object.assign(handleCoreStyle,vertical ? { 'left':`${handlePos}px` } : {'top':`${handlePos}px`});
         
         __wbn$(handle)
             .setStyle(handleCoreStyle);
@@ -52,7 +52,7 @@ export class Handle {
             const {handle, vertical, config, slider} = this.ui;
             this._positionHandle();
             const handlePoint = this.ui._centerPoint(handle,val,_valOrFunc(config.handle.position,[slider,slider.value],0))[0]
-            __wbn$(handle).setStyle(vertical ? { 'top' : handlePoint } : { 'left' : handlePoint });
+            __wbn$(handle).setStyle(vertical ? { 'top' : `${handlePoint}px` } : { 'left' : `${handlePoint}px` });
             this._handleLabel();
             res(this);
         });
@@ -73,8 +73,8 @@ export class Handle {
         
         __wbn$(handleLabel)
             .setStyle({
-              'left':handleRect.width/2 - labelRect.width/2 + (vertical ? labelPosition : 0),
-              'top':handleRect.height/2 - labelRect.height/2 + (vertical ? 0 : labelPosition)
+              'left': `${handleRect.width/2 - labelRect.width/2 + (vertical ? labelPosition : 0)}px`,
+              'top': `${handleRect.height/2 - labelRect.height/2 + (vertical ? 0 : labelPosition)}px`
             });   
         
          var handleLabelStyle = _valOrFunc(labelConfig.style,[slider,slider.value],{});

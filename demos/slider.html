@@ -1,8 +1,10 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="../dist/data-slider.min.js"></script>
-<link rel="stylesheet" href="../dist/data-slider.css"></link>
+<script src="../dist/data-slider.js"></script>
+<link rel="stylesheet" href="../dist/data-slider.min.css"></link>
 <style type="text/css">
 body,html {
     font-family:arial;
@@ -102,20 +104,14 @@ var options = (boundVar) => {
                     style: (slider,val) => {
                     	return {
                    		   backgroundColor: '#999',
-
-                           //margin:'0px 0px'
                     	}
                     },
                     
                     hoverStyle: {
                     	backgroundColor: 'blue',
-                      
-                        //margin:'0px 0px'
                     },
                     selectedStyle: {
                     	backgroundColor: '#990000',
-                    
-                    	//margin:'-1px -1px'
                     }
                     
                 }
@@ -152,7 +148,7 @@ var options = (boundVar) => {
 			    snap:false,
 			    labelsClickable: true,
 			    position:(slider,tickVal) => {
-			    	return tickVal % 15 ? -20 : 20;
+			    	return tickVal % 15 ? 0 : 20;
 			    }
 			}
 		},
