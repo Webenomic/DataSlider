@@ -7,21 +7,14 @@ export class Defaults {
             [(!config?.range),'No range defined in the DataSlider configuration.']
         ];
         
-        errors.forEach((errorArr,i) => { if (errorArr[0]) throw new Error((errorArr[1]).toString()); });
+        errors.forEach((errorArr) => { if (errorArr[0]) throw new Error((errorArr[1]).toString()); });
         
-        const blankCallback = function(this) { return this; }; 
+        const blankCallback = function(this: any) { return this; }; 
         
-        const countDecimals = function (value) {
+        const countDecimals = function (value: number) {
             if(Math.floor(value) === value) return 0;
             return value.toString().split(".")[1].length || 0; 
         }
-        
-        const emptyStyle = {
-            height: null,
-            width: null,
-            color: null,
-            borderRadius: null
-        };
         
         Object.assign(config, {
             orientation: config?.orientation || 'horizontal',
@@ -39,7 +32,7 @@ export class Defaults {
                 min: config.range?.min !== undefined ? config.range?.min : 0,
                 max: config.range?.max !== undefined ? config.range?.max : 100,
                 step: config.range?.step !== undefined ? config.range?.step : 1,
-                decimals: config.range?.decimals || countDecimals(config.range?.step) || 0
+                decimals: config.range?.decimals || countDecimals(Number(config.range?.step)) || 0
             },
             handle: {
                 show: config.handle?.show !== undefined ? config.handle?.show : true,

@@ -41,8 +41,6 @@ class Slider {
         });
     }
     
-   
-
     reset(val?: number) {
         this.ui._destroy();
         this.ui = new SliderUI(this.parent, this.config, this);
@@ -57,12 +55,12 @@ class Slider {
         const me = this;
         const { bindVarName, bindVarScope, config: { defaultValue, dataBinding: { scope }} } = this;
         scope.wbnScope = new Proxy(me.wbnBindScope, {
-            set(target,prop,val) {
+            set(target, prop, val) { 
                 me._updateValue(me._wbnValToProgVal(val),val)
                     .then(() => { me._updateBindings(); });
                 return true;
             },
-            get(target,prop) {
+            get(target, prop) {
                 me._updateBindings();
             }
         });
@@ -74,27 +72,27 @@ class Slider {
         return this;
     }
     
-    loading(isLoading) {
+    loading(isLoading: boolean) {
         const progClassList = this.ui.progressElem.classList;
         const progClass = `${CSSNamespace}loading`;
         isLoading ? progClassList.add(progClass) : progClassList.remove(progClass);
     }
     
-    update(val) {
+    update(val: number) {
         return this._updateValue(this._wbnValToProgVal(val),val)
             .then(() => { this._updateBindings(); });
     }
     
-    _wbnValToProgVal(wbnVal) {
-        const {range: { min,max }} = this.config;
+    _wbnValToProgVal(wbnVal: number) {
+        const {range: { min, max }} = this.config;
         return (wbnVal - min) * 100/(max-min); 
     }
     
-    _updateValue(val,wbnVal) {
+    _updateValue(val: number,wbnVal: number) {
         
-        return new Promise((res,rej) => {
+        return new Promise((res, rej) => {
             if (!isFinite(val)) val = Number(val);
-            const {min,max,decimals} = this.config.range;
+            const { min, max, decimals } = this.config.range;
             if (wbnVal < min || wbnVal > max) return;
             __wbn$(this.ui.progressElem)
                 .setVal(Math.round(val))
@@ -107,9 +105,9 @@ class Slider {
     }
     
     _updateBindings() {
-        const { config:{ range:{ min,max}, dataBinding: { transform }}, bindVarName, bindVarScope } = this;
+        const { config:{ range:{ min,max }, dataBinding: { transform }}, bindVarName, wbnBindScope } = this;
         
-        var val = this.wbnBindScope[bindVarName];
+        var val = wbnBindScope[bindVarName];
         if (val === undefined || val < min || val > max) return;
         var newVal = (transform) ? transform(val) : val;
         document.querySelectorAll(`[wbn-bind=${bindVarName}]`).forEach((ele: any) => {

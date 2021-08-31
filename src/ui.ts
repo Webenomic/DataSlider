@@ -728,7 +728,7 @@ export class SliderUI {
         });
         
         [container,document].forEach((elem) => {
-            __wbn$(elem).on(['touchmove','touchstart'],(e: any) => {
+            __wbn$(elem).on(['touchmove','touchstart','mouseover'],(e: any) => {
                 if (this.tickOn && !tooltipConfig.ticks.show) return;
                 if (progressDrag || e.currentTarget == container) this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
             }).on(['touchend','mouseup','mouseout'],() => {
