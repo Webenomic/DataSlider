@@ -20,8 +20,8 @@
     "build:js:write": "rollup -c rollup.config.js",
     "build:js:compress": "uglifyjs dist/data-slider.js --compress --mangle --comments --output  dist/data-slider.min.js",
     "build:styles": "npm run build:styles:write && npm run build:styles:compress",
-    "build:styles:write": "lessc src/data-slider.less dist/data-slider.css",
-    "build:styles:compress": "lessc src/data-slider.less dist/data-slider.min.css --clean-css",
+    "build:styles:write": "lessc src/less/data-slider.less dist/data-slider.css",
+    "build:styles:compress": "lessc src/less/data-slider.less dist/data-slider.min.css --clean-css",
     "watch": "npm-watch"
   },
   "repository": {
