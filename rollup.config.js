@@ -10,7 +10,7 @@ export default {
             format: 'umd',
             name: 'Webenomic Data-Slider',
             exports: 'named',
-            banner: `/*\n    Webenomic Data-Slider v` + version +`\n\thttps://webenomic.com\n\t(c) ` + new Date().getFullYear() + ` Webenomic LLC\n\tReleased under the MIT License\n*/`
+            banner: `/** @license \n Webenomic Data-Slider v${version} | Copyright (c) ${new Date().getFullYear()} | Ben Silverman, Webenomic LLC | MIT Licensed \n**/`
         },
     ],
     plugins: [typescript(),commonjs()],
