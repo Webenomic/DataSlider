@@ -1,7 +1,7 @@
-import {WebenomicCore} from './util';
-import {Config} from './config';
-import {Options, CSSNamespace} from './types';
-import {SliderUI} from './ui';
+import {WebenomicCore} from './core/util';
+import {Config} from './core/config';
+import {Options, CSSNamespace} from './core/types';
+import {SliderUI} from './ui/ui';
 
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 

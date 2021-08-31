@@ -1,5 +1,5 @@
-import { Options, CSSNamespace } from './../types';
-import {WebenomicCore} from './../util';
+import { Options, CSSNamespace } from './../core/types';
+import {WebenomicCore} from './../core/util';
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 
 export class Events {

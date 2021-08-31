@@ -1,11 +1,11 @@
-import { Options, CSSNamespace, Direction, Orientation, TickLabel, Dimensions } from './types';
-import { WebenomicCore } from './util';
-import { Tooltip } from './ui/tooltip';
-import { TickMarks } from './ui/tick_marks';
-import { TickLabels } from './ui/tick_labels';
-import { Handle } from './ui/handle';
-import { Events } from './ui/events';
-import { _valOrFunc, _round, _clamp } from './funcs';
+import { Options, CSSNamespace, Direction, Orientation, TickLabel, Dimensions } from '../core/types';
+import { _valOrFunc, _round, _clamp } from '../core/funcs';
+import { WebenomicCore } from '../core/util';
+import { Tooltip } from './tooltip';
+import { TickMarks } from './tick_marks';
+import { TickLabels } from './tick_labels';
+import { Handle } from './handle';
+import { Events } from './events';
 
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 declare global {

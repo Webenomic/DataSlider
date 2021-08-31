@@ -1,7 +1,7 @@
-import { Options, CSSNamespace, TickLabel } from './../types';
-import {WebenomicCore} from './../util';
+import { Options, CSSNamespace, TickLabel } from './../core/types';
+import {WebenomicCore} from './../core/util';
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
-import { _valOrFunc } from './../funcs';
+import { _valOrFunc } from './../core/funcs';
 
 export class TickLabels {
     
@@ -12,7 +12,7 @@ export class TickLabels {
         this.ui = ui;
         this.config = config;
         this._createTickLabels();
-        return this;
+        return this; 
     }
     
     _createTickLabels() {

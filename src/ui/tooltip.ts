@@ -1,7 +1,7 @@
-import { Options, CSSNamespace } from './../types';
-import {WebenomicCore} from './../util';
+import { Options, CSSNamespace } from './../core/types';
+import {WebenomicCore} from './../core/util';
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
-import { _valOrFunc } from './../funcs';
+import { _valOrFunc } from './../core/funcs';
 
 export class Tooltip {
     
@@ -12,8 +12,7 @@ export class Tooltip {
     constructor(ui: any, config: Options) {
         this.ui = ui;
         this.config = config;
-        this._createTooltip();
-        return ui;
+        return this._createTooltip();
     }
     
     _createTooltip() {

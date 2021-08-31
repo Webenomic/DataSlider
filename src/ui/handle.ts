@@ -1,7 +1,7 @@
-import { Options, CSSNamespace } from './../types';
-import {WebenomicCore} from './../util';
+import { Options, CSSNamespace } from './../core/types';
+import {WebenomicCore} from './../core/util';
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
-import { _valOrFunc } from './../funcs';
+import { _valOrFunc } from './../core/funcs';
 
 export class Handle {
     
@@ -11,9 +11,9 @@ export class Handle {
     constructor(ui: any, config: Options) {
         this.ui = ui;
         this.config = config;
-        this._positionHandle();
-        this._updateHandle(ui.slider.value);
-        this._handleLabel();
+        this._positionHandle()._updateHandle(ui.slider.value).then(() => {
+            this._handleLabel();
+        });
         return this;
     }    
     
@@ -61,7 +61,7 @@ export class Handle {
     _handleLabel() {
         const { slider, vertical, handle, handleLabel,  config: { handle: { label: labelConfig }}} = this.ui;
         if (!labelConfig) return;
-
+        
         const labelValue = slider.value !== undefined ? slider.value : slider.defaultValue;
         var labelHtml = _valOrFunc(labelConfig.text,[slider,labelValue],labelValue);
         __wbn$(handleLabel).html(labelHtml);
@@ -79,7 +79,7 @@ export class Handle {
         
          var handleLabelStyle = _valOrFunc(labelConfig.style,[slider,slider.value],{});
          Object.assign(handleLabel.style,handleLabelStyle);  
-
+         return this;
     }
     
 }
