@@ -116,8 +116,10 @@ export class WebenomicCore {
 
     on(_event: any, func?: object, options?: object | boolean) {
         this._apply((elem) => { 
+            
             if (typeof _event === 'string') _event = [_event];
             _event.forEach((_event: string) => {
+                if (['touchmove','touchstart'].indexOf(_event)) {  options = { passive: true }; }
                 elem.addEventListener(_event, func, options);
             });
         });

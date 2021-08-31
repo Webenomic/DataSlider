@@ -1,4 +1,4 @@
-import { Options, CSSNamespace, Direction, Orientation,TickLabel } from './types';
+import { Options, CSSNamespace, Direction, Orientation, TickLabel, Dimensions } from './types';
 import { WebenomicCore } from './util';
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 declare global {
@@ -45,7 +45,7 @@ export class SliderUI {
     progressDrag: boolean;
     uiCreated: Promise<any>;
     uiReady: boolean;
-    uiDimen: object;
+    dimensions: Dimensions | null;
 
     constructor(parent: any, config: Options, slider: any) {
 
@@ -61,7 +61,6 @@ export class SliderUI {
         });
 
          this.uiCreated = new Promise((res,rej) => {
-
             this._createElements()
             .then(() => {
                 this._assignAttributes()
@@ -82,7 +81,7 @@ export class SliderUI {
             }).then(() => {
                 this._responsiveUI()
             }).then(() => {
-                this.uiDimen = this.UI();
+                this.dimensions = this._dimensions();
                 this.uiReady = true;
             });
             res(this);
@@ -91,7 +90,8 @@ export class SliderUI {
         return this;
     }
     
-    UI() {
+    _dimensions(recalibrate?: boolean | false) {
+        if (this.dimensions && !recalibrate) return this.dimensions; 
         
         const parentDimension = (prop) => { return parseInt(window.getComputedStyle(this.parent, null).getPropertyValue(prop)) };
         
@@ -220,7 +220,7 @@ export class SliderUI {
 
     _assignAttributes() {
         return new Promise((res) => {
-            const {height,min,max} = this.UI();
+            const {height,min,max} = this._dimensions();
             const {config} = this;
             
             __wbn$(this.progressElem)
@@ -398,7 +398,7 @@ export class SliderUI {
                 });
             }
             
-            const {min,max} = this.UI();
+            const {min,max} = this._dimensions();
             document.querySelectorAll('input[wbn-bind]').forEach((ele: any) => {
                 var eleBindVarName = ele.getAttribute('wbn-bind');
                 var changeFunc = () => { window.wbnScope[eleBindVarName] = ele.value; };
@@ -422,8 +422,7 @@ export class SliderUI {
     _createTickMarks() {
         return new Promise((res) => {
             
-            const { tickMarks, config, container, slider, config: { ticks: { marks: tickMarkConfig }}} = this;
-            const { min, max, decimals } = this.UI();
+            const { tickMarks, config, container, slider, config: { range: { min, max, decimals }, ticks: { marks: tickMarkConfig }}} = this;
             this.markSteps = [];
             this.tickMarks = [];
             tickMarkConfig.forEach((markSet) => {
@@ -497,7 +496,7 @@ export class SliderUI {
     
     _positionTickMark(markEle: any, markValue: number) {
             const { vertical, slider } = this;
-            const { positionProperty, progressThickness } = this.UI();
+            const { positionProperty, progressThickness } = this._dimensions();
   
             //re-register default style if tickMark is in selected state
             const [deselectedEvent, selectedEvent] = ['deselected', 'selected'].map((customEvent) => { return new CustomEvent(customEvent); });
@@ -517,9 +516,7 @@ export class SliderUI {
     _createTickLabels() {
         
         return new Promise((res) => {
-            const {slider,container,slider: { config: { ticks: { labels: tickLabels }}}} = this;
-            
-            const {min,max} = this.UI();
+            const {slider,container,slider: { config: { range: { min, max }, ticks: { labels: tickLabels }}}} = this;
             var {data: tickData} = tickLabels;
             if (tickData.length === 0) return this;
             
@@ -584,7 +581,7 @@ export class SliderUI {
     
     _tickPoint(ele: Element,val: number,position: number) {
         const { vertical, progressElem, config: { range: { min, max } } } = this;
-        const { progressLength, progressOffset, directionAlias, progressThickness, positionOffsetProperty } = this.UI();
+        const { progressLength, progressOffset, directionAlias, progressThickness, positionOffsetProperty } = this._dimensions(true);
         const shim = vertical ? progressThickness/2 : 0;
         const tickPointsX = {
             'right': ((val - min) * progressLength / (max - min) + progressOffset) + shim,
@@ -601,7 +598,7 @@ export class SliderUI {
     }
     
     _centerPoint(ele: Element,val: number,position: number) {
-         const {progressLength,progressOffset,directionAlias,progressThickness} = this.UI();
+         const {progressLength,progressOffset,directionAlias,progressThickness} = this._dimensions(true);
          const shim = this.vertical ? (progressThickness/2) : 0;
          const eleWidth = ele.rect()[this.vertical ? 'height' : 'width'];
          const eleHeight = ele.rect()[this.vertical ? 'width' : 'height']
@@ -618,7 +615,7 @@ export class SliderUI {
 
     _positionTickLabel(tickEle: any, tickValue: number, tickData: TickLabel, tickIndex: number) {
         const {vertical,slider,progressElem,config: { ticks: { labels: tickLabels }}} = this;
-        const {min,max,positionProperty} = this.UI();
+        const {min,max,positionProperty} = this._dimensions();
         if (tickValue < min || tickValue > max) return;
         const me = this;
         let tickPosition = this._valOrFunc(tickLabels.position,[slider,tickValue,tickIndex],0);
@@ -678,7 +675,7 @@ export class SliderUI {
             if (!startCap && !endCap) res(this);
             
             const { slider, vertical, direction, progressElem } = this;
-            const { positionProperty, progressRect, progressThickness, positionOffsetProperty } = this.UI();
+            const { positionProperty, progressRect, progressThickness, positionOffsetProperty } = this._dimensions();
             
             const capProps =  {
                     'up' : ['top','bottom'],
@@ -725,12 +722,9 @@ export class SliderUI {
     }
     
     _createTooltip() {
+        if (this.config.tooltips.show === false) return this;
         
         const { container, progressDrag, vertical, tickLabels, config: { tooltips: tooltipConfig, ticks: { labels: { data: labelData }}}} = this;
-       
-        if (tooltipConfig.show === false) return this;
-        
-        const containerRect = container.rect();
         const _tooltip = __wbn$().create('div',true)
                                  .setClass(`${CSSNamespace}tooltip`)
                                  .setStyle({display:'none'})
@@ -753,7 +747,7 @@ export class SliderUI {
         });
         
         [container,document].forEach((elem) => {
-            __wbn$(elem).on(['mouseover','mousemove','touchmove','touchstart'],(e: any) => {
+            __wbn$(elem).on(['touchmove','touchstart'],(e: any) => {
                 if (this.tickOn && !tooltipConfig.ticks.show) return;
                 if (progressDrag || e.currentTarget == container) this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
             }).on(['touchend','mouseup','mouseout'],() => {
@@ -768,7 +762,7 @@ export class SliderUI {
     _showTooltip(_tooltip: HTMLElement,tooltipStart: number,tickIndex?: number | null,tickVal?: string | null) {
         
         const { progressElem, slider, steps, vertical, config: {tooltips: tooltipConfig } } = this;
-        const { positionOffsetProperty, progressTop, progressBottom, progressThickness, directionAlias, progressLeft, progressRight, progressLength } = this.UI();
+        const { positionOffsetProperty, progressTop, progressBottom, progressThickness, directionAlias, progressLeft, progressRight, progressLength } = this._dimensions(true);
         const _offsetStart: number = tooltipStart;
         
         var _parentOffsetStart: number,_parentOffsetEnd: number;
@@ -836,7 +830,8 @@ export class SliderUI {
     }
 
     _refreshUI() {
-        const {progressBottom,progressRight,positionProperty} = this.UI();
+        
+        const {progressBottom,progressRight,positionProperty} = this._dimensions();
         const {vertical,progressElem,slider: { config: { ticks }}} = this;
         const tickLabelData = ticks.labels.data;
 
@@ -859,13 +854,13 @@ export class SliderUI {
         }
         
         this._responsiveUI()._updateHandle(progressValue);
-        
+
         return this;
        
     }
     
     _constrainContainer() {
-        const { containerRect, parentHeight, parentWidth, progressThickness } = this.UI();
+        const { containerRect, parentHeight, parentWidth, progressThickness } = this._dimensions(true);
         const { tickLabels, startCap, endCap, vertical, tickMarks, direction, progressElem } = this;
         
         const container = __wbn$(this.container).elem;
@@ -950,7 +945,7 @@ export class SliderUI {
     }
     
     _progValToWbnVal(progVal: number): number {
-        const {min,max,decimals} = this.UI();
+        const {min,max,decimals} = this._dimensions();
         return this._round(this._clamp(min + ((max - min) * progVal / 100), min, max), decimals);
     }
     
@@ -972,10 +967,10 @@ export class SliderUI {
     
     _updateProgress(e: any, tickPos?: number) {
         return new Promise((res) => {
-            const { progressTop, progressLeft,progressBottom,progressRight,progressLength,directionAlias } = this.UI();
+            if (!this.progressDrag && !tickPos && e.touches === undefined) return;
+            
+            const { progressTop, progressLeft,progressBottom,progressRight,progressLength,directionAlias } = this._dimensions(true);
             const { progressElem, steps } = this;
-    
-            if (!this.progressDrag && !tickPos && e.touches === undefined) return
             const posProperty = this.vertical ? 'clientY' : 'clientX';
             const clientPos = e ? e[posProperty] || e.touches[0][posProperty] : tickPos;
             

@@ -131,3 +131,28 @@ export interface Options {
     onDragStart: Function,
     onDragEnd: Function
 }
+
+export interface Dimensions {
+    parentHeight: number,
+    parentWidth: number,
+    containerRect: object,
+    height: number,
+    progressDrag: boolean,
+    progressRect: object,
+    progressLeft: number,
+    progressTop: number,
+    progressBottom: number,
+    progressRight: number,
+    progressLength: number,
+    progressThickness: number,
+    progressOffset: number,
+    positionProperty: string,
+    positionOffsetProperty: string,
+    thicknessProperty: string,
+    directionAlias: string,
+    min: number,
+    max: number,
+    step: number | Function,
+    decimals: number,
+    defaultValue: number
+}
