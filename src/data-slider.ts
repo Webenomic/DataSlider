@@ -42,7 +42,7 @@ class Slider {
     }
     
     reset(val?: number) {
-        this.ui._destroy();
+        this.ui._destroyElements();
         this.ui = new SliderUI(this.parent, this.config, this);
         if (val) {
             this._updateValue(this._wbnValToProgVal(val),val);

@@ -58,7 +58,7 @@ export interface TickLabel extends Stylable {
 }
 
 export interface TickLabels extends Stylable {
-    data: TickLabel[] | Function | [],
+    data: TickLabel[],
     responsive: true,
     labelsClickable: boolean,
     position: number | Function,
@@ -137,7 +137,6 @@ export interface Dimensions {
     parentWidth: number,
     containerRect: object,
     height: number,
-    progressDrag: boolean,
     progressRect: object,
     progressLeft: number,
     progressTop: number,

@@ -1,13 +1,18 @@
 import { Options, CSSNamespace, Direction, Orientation, TickLabel, Dimensions } from './types';
 import { WebenomicCore } from './util';
+import { Tooltip } from './ui/tooltip';
+import { TickMarks } from './ui/tick_marks';
+import { TickLabels } from './ui/tick_labels';
+import { Handle } from './ui/handle';
+import { Events } from './ui/events';
+import { _valOrFunc, _round, _clamp } from './funcs';
+
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
 declare global {
     interface Element {
         rect(): DOMRect;
     }
-}
 
-declare global {
     interface HTMLElement {
         hide(): void;
         show(): void;
@@ -33,31 +38,55 @@ export class SliderUI {
     container: HTMLElement;
     handle: HTMLElement;
     handleLabel: HTMLElement;
-    focused: boolean;
     steps: number[];
+    
     tickLabels: Element[];
+    tickLabelClass: TickLabels;
     tickMarks: Element[];
+    tickMarkClass: TickMarks;
     markSteps: number[];
     tickOn: number | null;
     tickVal: any;
+    
+    handleClass: Handle;
+    
     startCap: HTMLElement | null;
     endCap: HTMLElement | null;
-    progressDrag: boolean;
     uiCreated: Promise<any>;
     uiReady: boolean;
     dimensions: Dimensions | null;
-
+    
+    /** alias methods from associated classes */
+    _updateTicks(val: number) {
+        return this.tickLabelClass._updateTicks(val);
+    }
+    
+    _updateHandle(val: number) {
+        return this.handleClass._updateHandle(val);
+    }
+    
+    _updateValue(val: number, wbnVal: number) {
+        return new Promise((res) => {
+            this.slider._updateValue(val, wbnVal)
+            res(this);
+        });
+    }
+        
+    _wbnValToProgVal(wbnVal: number) {
+        return this.slider._wbnValToProgVal(wbnVal);
+    }
+    _updateBindings() {
+        return this.slider._updateBindings();
+    }
+    /** end alias methods **/   
+    
     constructor(parent: any, config: Options, slider: any) {
 
-        
         Object.assign(this,{
             slider: slider,
             config: config,
             parent: parent,
-            focused: false,
-            uiReady: false,
-            tickLabels: [],
-            steps: []
+            uiReady: false
         });
 
          this.uiCreated = new Promise((res,rej) => {
@@ -67,17 +96,17 @@ export class SliderUI {
             }).then(() => {
                 this._createSteps()
             }).then(() => {
-                this._createTickLabels()
+                this.handleClass = new Handle(this,config);
+            }).then(() => {
+                this.tickLabelClass = new TickLabels(this,config);
+            }).then(() => {
+                this.tickMarkClass = new TickMarks(this,config);
+            }).then(() => {
+                new Tooltip(this,config);
             }).then(() => {
                 this._createCaps()
             }).then(() => {
-                this._createTickMarks()
-            }).then(() => {
-                this._createTooltip()
-            }).then(() => {
-                this._assignEvents()
-            }).then(() => {
-                this._handleLabel()
+                new Events(this,config);
             }).then(() => {
                 this._refreshUI()
             }).then(() => {
@@ -90,8 +119,17 @@ export class SliderUI {
 
         });
         return this;
+    } 
+    
+    /* public method to redraw UI, post-initialization */
+    update() {
+        this._assignAttributes()
+            .then(() => this._createSteps())
+            .then(() => this._refreshUI());
+        return this;
     }
     
+    /* DOM dimensions for all SliderUI components, caches in this.dimenions by default for better performance */
     _dimensions(recalibrate?: boolean | false) {
         if (this.dimensions && !recalibrate) return this.dimensions; 
         
@@ -115,7 +153,6 @@ export class SliderUI {
             parentWidth: parentWidth,
             containerRect: containerRect,
             height: config.bar.thickness,
-            progressDrag: this.progressDrag,
             progressRect: progressRect,
             progressLeft: progressRect.left,
             progressTop: progressRect.top,
@@ -131,28 +168,23 @@ export class SliderUI {
             defaultValue: config.defaultValue
         }
     }
-
-    _destroy() {
-        
-        const { progressElem, handle, tickLabels, tickMarks } = this;
-        [progressElem,handle,...tickLabels,...tickMarks].forEach((ele) => {
-            ele.remove(); 
-        });
-        this.steps = [];
-        
-    }
-
+    
+    /* create core DOM elements */
     _createElements() {
         return new Promise((res) => {
             
+            const { config } = this;
+            
+            /* create container */
             this.container = __wbn$().create('div',true).setAttr('tabindex','0').elem;
             this.parent.appendChild(this.container);
-            this.orientation = this.config.orientation;
+            this.orientation = config.orientation;
             this.vertical = this.orientation === 'vertical';
             const containerClass = this.container.classList;
             [`${CSSNamespace}container`,this.orientation].forEach((className) => { containerClass.add(className); }); 
-
-            this.direction = this.config.direction;
+            
+            /* CSS-specific left-right/up-down direction */
+            this.direction = config.direction;
             const directionToCSS = {
                 'left':'rtl',
                 'down':'ltr',
@@ -160,11 +192,11 @@ export class SliderUI {
                 'up':'rtl'
             }
             
+            /* create <progress/> polyfill element */
             const parentHeight = parseInt(window.getComputedStyle(this.parent, null).getPropertyValue('height')); 
-            
             const _progressElem = __wbn$().create('progress', true)
                                           .setClass(`${CSSNamespace}slider`)
-                                          .setAttr('value', this.config.defaultValue.toString())
+                                          .setAttr('value', config.defaultValue.toString())
                                           .setAttr('tabindex', '0')
                                           .setStyle({
                                                 direction:directionToCSS[this.direction],
@@ -173,15 +205,15 @@ export class SliderUI {
                                           .elem;
                                           
                                           
-            if (this.vertical) _progressElem.style.marginLeft = this.config.bar.thickness/2;
+            if (this.vertical) _progressElem.style.marginLeft = config.bar.thickness/2;
             this.container.appendChild(_progressElem);
     
-            
+            /* create ribbon for secondary progress */
             const _ribbonElem = __wbn$().create('div',true).setClass(`${CSSNamespace}ribbon`).elem;
             this.container.appendChild(_ribbonElem);
             
-            var handle = this.config.handle;
-            
+            /* create handle & handle label */
+            var handle = config.handle;
             const _handleElem = __wbn$().create('div', true)
                                         .setClass(`${CSSNamespace}handle ${handle.className || ''}`)
                                         .elem;
@@ -192,7 +224,8 @@ export class SliderUI {
                 _handleElem.appendChild(_handleLabelElem);
            
             this.container.appendChild(_handleElem);
-                  
+            
+            /* elements into class */
             Object.assign(this, {
                 container: this.container,
                 progressElem: _progressElem,
@@ -205,14 +238,8 @@ export class SliderUI {
         });
        
     }
-
-    update() {
-        this._assignAttributes()
-            .then(() => this._createSteps())
-            .then(() => this._refreshUI());
-        return this;
-    }
-
+    
+    /* assign attributes and polyfill <progress/> CSS variables */ 
     _assignAttributes() {
         return new Promise((res) => {
             const { height } = this._dimensions();
@@ -243,8 +270,6 @@ export class SliderUI {
                 if (value && ele) ele['style'].setProperty(key,`${thisValue}`);
             }
             
-            this._positionHandle();
-            
             (config.handle.show !== true) ? __wbn$(this.handle).hide() : __wbn$(this.handle).show();
             (config.ribbon.show !== true) ? this.progressElem.classList.add('hidden_ribbon') : this.progressElem.classList.remove('hidden_ribbon');
             
@@ -252,47 +277,14 @@ export class SliderUI {
         });
     }
     
-    _positionHandle() {
-        const { slider, vertical, handle, config: { handle: handleConfig, bar: {thickness: elemHeight }}} = this;
-        
-        const handleDimension = (dimension: string) => {
-            var thisDimension = this._valOrFunc(handleConfig[dimension],[slider,slider.value],null);
-            return (thisDimension === null ? elemHeight * 2 : thisDimension);
-        }
-        
-        const handlePos = this.progressElem[vertical ? 'offsetLeft' : 'offsetTop'] - 
-                            (handle.rect()[vertical ? 'width' : 'height'] / 2) + 
-                            (vertical ? 0 : elemHeight / 2) + 
-                            this._valOrFunc(handleConfig.position,[slider,slider.value],0);
-
-        var handleCoreStyle = {
-            'height': handleDimension('height'),
-            'width': handleDimension('width'),
-            'borderRadius': `${handleDimension('borderRadius')}px`,
-        }
-        
-        const handleAdditionalStyle = this._valOrFunc(handleConfig.style,[slider,slider.value],{});
-        
-        Object.assign(handleCoreStyle,handleAdditionalStyle);
-        Object.assign(handleCoreStyle,vertical ? { 'left':handlePos } : {'top':handlePos});
-        
-        __wbn$(handle)
-            .setStyle(handleCoreStyle);
-        
-        return this;
-    }
-    
-    _round = (number, decimalPlaces) => Number(Math.round(Number(number + "e" + decimalPlaces)) + "e" + decimalPlaces * -1);
-
-    _clamp = (val, min, max) => { return val > max ? max : val < min ? min : val; };
-
+    /* create array of values according to range steps */
     _createSteps() {
         return new Promise((res) => {
             
-            const {slider, config: { ticks, range: { min, max, step, decimals }}} = this;
+            const {config: { ticks: { labels }, range: { min, max, step, decimals }}} = this;
     
-            const tickLabels = slider.config.ticks.labels;
-            var tickData = tickLabels.data;
+            const tickLabels = labels;
+            const tickData = tickLabels.data;
     
             if (tickData.length == 0 || tickLabels.snap === false) {
     
@@ -304,7 +296,7 @@ export class SliderUI {
     
                 for (let i: number = min; i <= max; i += (typeof step === 'function') ? 1 : stepVal) {
                     var newStep = (typeof step === 'function') ? step(increment) : i;
-                    steps.push(this._round(newStep, decimals));
+                    steps.push(_round(newStep, decimals));
                     increment += 1;
                 }
                 steps.push(max);
@@ -317,249 +309,8 @@ export class SliderUI {
             return res(this);
         });
     }
-
-    _assignEvents() {
-        return new Promise((res) => {         
-            
-            const { slider, config, tickLabels, container, handle, progressElem, direction, config: { range: { min, max }} } = this;
-            const me = this;
-            __wbn$(this.container).on(['mousedown','touchstart'], (e) => {
-                const { tickVal } = me;
-                if (tickVal) {
-                    slider.update(tickVal);
-                    return;
-                }
-                document.body.classList.add(`${CSSNamespace}select_disabled`);
-                me.config.onDragStart(this,slider.value);
-                me.progressDrag = true;
-                me._updateProgress(e);
-                me.config.onDrag(slider);
-            }).on(['mousemove', 'touchmove'], (e) => {
-                const { tickVal } = me;
-                if (tickVal) return;
-                me._updateProgress(e);
-                me.config.onDrag(slider);
-            },{passive:false});
-            
-            __wbn$(document).on(['mouseup','touchend'], (e) => { 
-                if(me.progressDrag) config.onDragEnd(slider,slider.value); 
-                me.progressDrag = false;
-                document.body.classList.remove(`${CSSNamespace}select_disabled`); 
-            });
-            
-            document.addEventListener('mousemove', (e) => { 
-                me._updateProgress(e)
-                    .then(() => { config.onDrag(slider) }); 
-            });
-            
-            if (this.config.arrowKeys) {
-                const arrowKeyCodes = {
-                    'right': { 37: -1, 39: 1},
-                    'left': { 37: 1, 39: -1},
-                    'up': {38: 1, 40: -1},
-                    'down':{38: -1, 40: 1}
-                }
-                
-                const focusElements = tickLabels.concat([container, handle, progressElem]);
-                focusElements.forEach((elem) => {
-                    elem.addEventListener('focus',(e) => {
-                        me.focused = true; 
-                    });
-                    elem.addEventListener('blur',(e) => {
-                        me.focused = false; 
-                    });
-                });
-                
-                 document.addEventListener('keydown', (e) => {
-                    var increment = arrowKeyCodes[direction][e.which];
-                    if (increment && me.focused) {
-                        if (e.shiftKey) increment *= 5;
-                        const newValue = Number(slider.value) + (increment * Number(config.range.step));
-                        slider.update(newValue);
-                    }    
-                });
-            }
-            
-            document.querySelectorAll('input[wbn-bind]').forEach((ele: any) => {
-                var eleBindVarName = ele.getAttribute('wbn-bind');
-                var changeFunc = () => { window.wbnScope[eleBindVarName] = ele.value; };
-                ele.addEventListener('change', changeFunc);
-                ele.addEventListener('keyup', changeFunc);
-                ele.addEventListener('blur', () => {
-                    if (ele.value > max) ele.value = max;
-                    if (ele.value < min) ele.value = min;
-                });
-            });
     
-            window.addEventListener('resize', (e) => { me._refreshUI(); });
-            res(this);
-        });
-    }
-    
-    _valOrFunc(item, val, defaultVal) {
-        return item ? (typeof item === 'function' ? item.apply(null, val) : item) : defaultVal;
-    }
-    
-    _createTickMarks() {
-        return new Promise((res) => {
-            
-            const { tickMarks, config, container, slider, config: { range: { min, max, decimals }, ticks: { marks: tickMarkConfig }}} = this;
-            this.markSteps = [];
-            this.tickMarks = [];
-            tickMarkConfig.forEach((markSet) => {
-                const markRange = markSet.range;
-                var step = markRange?.step;
-    
-                var increment = 1;
-                var stepVal = (typeof step === 'function') ? step(increment) : step;
-                
-                var [markMin,markMax] = [markRange.min,markRange.max];
-                
-                if (markMin < min || markMax > max) {
-                    console.error(`Tick mark range ${markMin}-${markMax} out of default range ${min}-${max}. Ignored.`);
-                    markMin = markMin < min-1 ? min : markMin;
-                    markMax = markMax > max+1 ? max : markMax;
-                }
-
-                let markSteps: number[] = [];
-                markSteps.push(markMin);
-    
-                for (let i: number = markMin; i <= markMax; i += (typeof step === 'function') ? 1 : stepVal) {
-                    var newStep = (typeof step === 'function') ? step(increment) : i;
-                    markSteps.push(this._round(newStep, decimals));
-                    increment += 1;
-                }
-
-                markSteps.forEach((markValue) => {
-                    
-                    if (markValue < min || markValue > max) return;
-                    var markEle = __wbn$().create('div',true)
-                        .setClass(`${CSSNamespace}tick_mark`)
-                        .setAttr('wbn-value', markValue)
-                        .setStyle({
-                            height: markSet.height,
-                            width: `${markSet.width}px`,
-                            borderRadius: `${markSet.borderRadius}px`,
-                            backgroundColor: markSet.color
-                         })
-                        .elem;   
-                    
-                    const markStyle = this._valOrFunc(markSet?.style,[slider, markValue],{});
-                    const markHoverStyle = this._valOrFunc(markSet?.hoverStyle,[slider, markValue],markStyle);
-                    const markSelectedStyle = this._valOrFunc(markSet?.selectedStyle,[slider, markValue],markStyle);
-                    
-                    Object.assign(markEle.style,markStyle); 
-
-                    const thisMarkEle = __wbn$(markEle);
-                    
-                   thisMarkEle.on('mouseover',() => {
-                        thisMarkEle.setStyle(markHoverStyle);  
-                    }).on('mouseout',() => {
-                        thisMarkEle.setStyle(slider.value == markValue ? markSelectedStyle : markStyle);  
-                    }).on('selected',() => {
-                        thisMarkEle.setStyle(markSelectedStyle);
-                        this._updateHandle(markValue);
-                    }).on('deselected',() => {
-                         thisMarkEle.setStyle(markStyle);
-                    });
-                    
-                    Object.assign(markEle,{ position: markSet.position });
-                    container.appendChild(markEle);
-                    this.tickMarks.push(markEle);
-                });
-                
-                this.markSteps = this.markSteps.concat(markSteps);
-            });
-            //this._refreshUI();
-            res(this);
-        });
-    }
-    
-    _positionTickMark(markEle: any, markValue: number) {
-            const { vertical, slider } = this;
-            const { positionProperty } = this._dimensions();
-  
-            //re-register default style if tickMark is in selected state
-            const [deselectedEvent, selectedEvent] = ['deselected', 'selected'].map((customEvent) => { return new CustomEvent(customEvent); });
-            if (markValue == slider.value)
-                markEle.dispatchEvent(deselectedEvent);
-            const markPosition = this._valOrFunc(markEle.position,[slider, markValue],0);
-            const markPoints = this._tickPoint(markEle, markValue, markPosition);
-             
-            markEle.style[vertical ? 'left' : 'top'] = markPoints[1];
-            markEle.style[positionProperty] = markPoints[0];
-            
-            //re-register selected state, if present
-            if (markValue == slider.value) markEle.dispatchEvent(selectedEvent);
-            return this;
-    }
-    
-    _createTickLabels() {
-        
-        return new Promise((res) => {
-            const {slider,container,slider: { config: { range: { min, max }, ticks: { labels: tickLabels }}}} = this;
-            var {data: tickData} = tickLabels;
-            if (tickData.length === 0) return this;
-            
-            const uniq = (val: any, i: number, self) => { return self.indexOf(val) === i };
-            tickData.sort((a:any, b: any) => (a.value > b.value) ? 1 : -1).filter(uniq);
-            tickData = tickData.filter((tick: any) => { 
-                const inRange = (tick.value > min && tick.value < max);
-                if (!inRange) console.error(`Tick label value ${tick.value} out of range. Ignored.`);
-                return inRange; 
-            });
-            slider.config.ticks.labels.data = tickData;
-            this.tickLabels = [];
-            
-            const me = this;
-            var ticksAndSteps: any[] = tickData.map((tick: any) => { return tick.value; }).sort();
-            
-            ticksAndSteps.forEach((tick, i) => {
-                
-                const tickValue = tickData[i].value !== undefined ? tickData[i].value : tick;
-                const tickLabel = this._valOrFunc(tickData[i]?.label?.text,[this.slider,tickData[i]?.value,i],tickData[i]?.value); 
-                const tickClassName = tickLabels.className || tick.className || ''; 
-                const tickStyles = {
-                    style: {},
-                    hoverStyle: {},
-                    selectedStyle: {}
-                };
-                
-                ['style','hoverStyle','selectedStyle'].forEach((styleVar) => {
-                    tickStyles[styleVar] = {
-                        ...this._valOrFunc(tickData[i]?.label[styleVar],[this.slider,tickData[i]?.value,i],{}),
-                        ...this._valOrFunc(tickLabels[styleVar],[this.slider,tickData[i]?.value,i],{})
-                    }
-                });
-
-                            
-                var tickEle = __wbn$().create('div', true)
-                    .setStyle(tickStyles.style)
-                    .setClass(`${CSSNamespace}tick_label ${tickClassName}`)
-                    .setAttr('wbn-value', tickValue)
-                    .html(tickLabel);
-                 
-                tickEle.on(['mouseover','focus'],(e) => {
-                    tickEle.setStyle(tickStyles.hoverStyle);
-                }).on(['mouseout','blur','deselected'],(e) => {
-                    if (!tickEle.elem.classList.contains('wbn_selected')) 
-                        tickEle.setStyle(tickStyles.style);
-                    else 
-                        tickEle.setStyle(tickStyles.selectedStyle);
-                }).on('selected',(e) => {
-                    tickEle.setStyle(tickStyles.selectedStyle);
-                })
-    
-                container.appendChild(tickEle.elem);
-                me._positionTickLabel(tickEle.elem, tickValue, tickData[i],i);
-                me.tickLabels.push(tickEle.elem);
-                
-                
-            });
-            res(this);
-        });
-    }
-    
+    /** positioning for tick labels and tick marks */
     _tickPoint(ele: Element,val: number,position: number) {
         const { vertical, progressElem, config: { range: { min, max } } } = this;
         const { progressLength, progressOffset, directionAlias, progressThickness, positionOffsetProperty } = this._dimensions(true);
@@ -578,75 +329,20 @@ export class SliderUI {
         return [tickPointX, tickPointY];
     }
     
+    /** positioning for handle and tooltips */
     _centerPoint(ele: Element,val: number,position: number) {
          const { progressLength,progressOffset,directionAlias,progressThickness } = this._dimensions(true);
          const shim = this.vertical ? (progressThickness/2) : 0;
          const eleWidth = ele.rect()[this.vertical ? 'height' : 'width'];
          const eleHeight = ele.rect()[this.vertical ? 'width' : 'height']
          const xPoints = {
-             'right':(progressOffset - eleWidth/2 + this._clamp(val / 100, 0, 1) * progressLength) + shim,
-             'left':((progressOffset + progressLength) - eleWidth/2 - this._clamp(val / 100, 0, 1) * progressLength) + shim,
+             'right':(progressOffset - eleWidth/2 + _clamp(val / 100, 0, 1) * progressLength) + shim,
+             'left':((progressOffset + progressLength) - eleWidth/2 - _clamp(val / 100, 0, 1) * progressLength) + shim,
          }
          const yPoint = {
              'top': xPoints[directionAlias] + progressThickness/2 - eleHeight/2 + position
          }
          return [xPoints[directionAlias],yPoint['top']];
-    }
-    
-
-    _positionTickLabel(tickEle: any, tickValue: number, tickData: TickLabel, tickIndex: number) {
-        const {vertical, slider, progressElem, config: {range: { min,max }, ticks: { labels: tickLabels }}} = this;
-        const { positionProperty } = this._dimensions();
-        if (tickValue < min || tickValue > max) return;
-        const me = this;
-        let tickPosition = this._valOrFunc(tickLabels.position,[slider,tickValue,tickIndex],0);
-        const tickPoints = this._tickPoint(tickEle,tickValue,tickPosition);
-        tickEle.style[positionProperty] = tickPoints[0];
-        tickEle.style[vertical ? 'left' : 'top'] = tickPoints[1];
-        
-        if (tickLabels.labelsClickable !== false) {
-            __wbn$(tickEle).setAttr('tabindex','0');
-            const [deselectedEvent,selectedEvent] = ['deselected','selected'].map((customEvent) => { return new CustomEvent(customEvent) });
-            
-            var _tickClick = (e: KeyboardEvent) => {
-                if (e.which && e.which != 13) return;
-                this.tickLabels.forEach((elem) => elem.dispatchEvent(deselectedEvent));
-                
-                me._updateTicks(tickValue)
-                  .then(() => this._updateValue(this._wbnValToProgVal(tickValue),tickValue))
-                  .then(() => this._updateBindings());
-                
-                tickEle.classList.add('wbn_selected');
-                tickEle.dispatchEvent(selectedEvent);
-                tickLabels.onTick(tickValue,tickData,tickEle,tickIndex,slider);
-                e.stopPropagation();
-                e.preventDefault();
-            }
-            
-            const tickEventListeners = ['click','mousedown','keydown'];
-            
-            if (tickEle._eventHandler) {
-                tickEventListeners.forEach((listener) => {
-                     tickEle.removeEventListener(listener, tickEle._eventHandler);
-                });
-            }
-            tickEle.classList.add('clickable');
-            tickEventListeners.forEach((listener) => {
-                tickEle.addEventListener(listener, _tickClick);
-            });
-            tickEle._eventHandler = _tickClick;
-        }
-       
-    }
-    
-    async _updateTicks(val: number) {
-        const ticksUpdated = new Promise((res) => {
-            const [deselectedEvent, selectedEvent] = ['deselected','selected'].map((customEvent) => { return new CustomEvent(customEvent) });
-            this.tickLabels.concat(this.tickMarks).forEach((tick) => { (Number(tick.getAttribute('wbn-value')) === val) ? [tick.classList.add('wbn_selected'),tick.dispatchEvent(selectedEvent)] : [tick.classList.remove('wbn_selected'),tick.dispatchEvent(deselectedEvent)] });
-            res(this);
-        });
-        
-        return await ticksUpdated;
     }
     
     _createCaps() {
@@ -682,7 +378,7 @@ export class SliderUI {
                     desc: 'end'
                 };
                 
-                const _capStyle = this._valOrFunc(capConfig.style,[slider,slider.value],{}); 
+                const _capStyle = _valOrFunc(capConfig.style,[slider,slider.value],{}); 
                 const _capElement = __wbn$().create('div',true)
                                     .setClass(`${CSSNamespace}cap ${capObj.desc} ${capConfig.className || ''}`)
                                     .setStyle(_capStyle)
@@ -702,128 +398,7 @@ export class SliderUI {
         });
     }
     
-    _createTooltip() {
-        if (this.config.tooltips.show === false) return this;
-        
-        const { container, progressDrag, vertical, tickLabels, config: { tooltips: tooltipConfig, ticks: { labels: { data: labelData }}}} = this;
-        const _tooltip = __wbn$().create('div',true)
-                                 .setClass(`${CSSNamespace}tooltip`)
-                                 .setStyle({display:'none'})
-                                 .elem;
-
-        container.appendChild(_tooltip);
-        
-        this.tickOn = null;
-        const posProperty = vertical ? 'clientY' : 'clientX';
-        
-        tickLabels.forEach((tickEle,i) => {
-            __wbn$(tickEle).on('mouseover',(e: MouseEvent) => { 
-                this.tickOn = i;
-                this.tickVal = labelData ? labelData[i].value : null;
-                //if (tooltipConfig.ticks.show) this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
-            }).on('mouseout',() => { 
-                this.tickVal = null;
-                this.tickOn = null; 
-            });
-        });
-        
-        [container,document].forEach((elem) => {
-            __wbn$(elem).on(['touchmove','touchstart','mouseover'],(e: any) => {
-                if (this.tickOn && !tooltipConfig.ticks.show) return;
-                if (progressDrag || e.currentTarget == container) this._showTooltip(_tooltip,e[posProperty] || e.touches[0][posProperty], this.tickOn, this.tickVal);
-            }).on(['touchend','mouseup','mouseout'],() => {
-                _tooltip.hide();
-            });
-        });
-
-        this.tooltip = _tooltip;
-        return this;
-    }
-
-    _showTooltip(_tooltip: HTMLElement,tooltipStart: number,tickIndex?: number | null,tickVal?: string | null) {
-        
-        const { progressElem, slider, steps, vertical, config: {tooltips: tooltipConfig } } = this;
-        const { positionOffsetProperty, progressTop, progressBottom, progressThickness, directionAlias, progressLeft, progressRight, progressLength } = this._dimensions(true);
-        const _offsetStart: number = tooltipStart;
-        
-        var _parentOffsetStart: number,_parentOffsetEnd: number;
-        _parentOffsetStart  = vertical ? progressTop || 0 : progressLeft || 0;
-        _parentOffsetEnd    = vertical ? progressBottom || 0 :  progressRight || 0;
-        
-        const _progValue = {
-            'right':((_offsetStart - _parentOffsetStart) / progressLength) * 100,
-            'left':((_parentOffsetEnd - _offsetStart) / progressLength) * 100,
-        }
-        
-        var wbnVal: number;
-        if (tickVal || tickVal == '0') {
-            wbnVal = Number(tickVal);
-        } else {
-            wbnVal = this._progValToWbnVal(_progValue[directionAlias].toFixed(2).toString()); 
-            if (steps.length > 0) wbnVal = this._wbnValToStep(wbnVal);
-        }
-             
-        var labelConfig = tickIndex !== null ? tooltipConfig.ticks.label : tooltipConfig.label;
-        var _tooltipText = this._valOrFunc(labelConfig.text,[slider,wbnVal,tickIndex],wbnVal);
-        
-        const _tooltipStyle = {
-            ...this._valOrFunc(labelConfig.style,[slider,wbnVal,tickIndex],{}),
-            ...this._valOrFunc(tooltipConfig.style,[slider,wbnVal,tickIndex],{})
-        };
-        
-        __wbn$(_tooltip).setStyle(_tooltipStyle);        
-        _tooltip.innerHTML = _tooltipText;
-        _tooltip.show();
-        
-        const tooltipPosition = this._valOrFunc(tooltipConfig.position,[slider,wbnVal],0);
-        const tooltipPoint = this._tickPoint(_tooltip,wbnVal,tooltipPosition)[0];
-        const tooltipTop = progressElem[positionOffsetProperty] + (vertical ? 0 : progressThickness/2) - (_tooltip.rect()[vertical ? 'width' : 'height']/2) + tooltipPosition;
-
-        const _finalStyle = vertical ? {
-            top: tooltipPoint,
-            left: tooltipTop
-        } : {
-            left: tooltipPoint,
-            top: tooltipTop
-        }
-
-        Object.assign(_tooltip.style,_finalStyle);
-    }
-    
-    _updateHandle(val: number) {
-        return new Promise((res) => {
-            const {handle, vertical, config, slider} = this;
-            this._positionHandle();
-            const handlePoint = this._centerPoint(handle,val,this._valOrFunc(config.handle.position,[slider,slider.value],0))[0]
-            __wbn$(handle).setStyle(vertical ? { 'top' : handlePoint } : { 'left' : handlePoint });
-            this._handleLabel();
-            res(this);
-        });
-    }
-    
-    _handleLabel() {
-        const { slider, vertical, handle, handleLabel,  config: { handle: { label: labelConfig }}} = this;
-        if (!labelConfig) return;
-        handleLabel.show();
-        const handleRect = handle.rect();
-        const labelRect = handleLabel.rect();
-        const labelPosition = this._valOrFunc(labelConfig.position,[slider,slider.value],0);
-        
-        __wbn$(handleLabel)
-            .setStyle({
-              'left':handleRect.width/2 - labelRect.width/2 + (vertical ? labelPosition : 0),
-              'top':handleRect.height/2 - labelRect.height/2 + (vertical ? 0 : labelPosition)
-            });   
-        
-        const labelValue = slider.value !== undefined ? slider.value : slider.defaultValue;
-        var labelHtml = this._valOrFunc(labelConfig.text,[slider,labelValue],labelValue);
-        __wbn$(handleLabel).html(labelHtml);
-                     
-         var handleLabelStyle = this._valOrFunc(labelConfig.style,[slider,slider.value],{});
-         Object.assign(handleLabel.style,handleLabelStyle);  
-
-    }
-
+    /* refresh elements with resizing and dynamic callbacks **/
     _refreshUI() {
         
         const { progressBottom,progressRight,positionProperty } = this._dimensions();
@@ -836,11 +411,11 @@ export class SliderUI {
         
         this.tickLabels.forEach((tick, i) => {
             const labelValue = tickLabelData[i] ? tickLabelData[i].value : tick
-            this._positionTickLabel(tick, labelValue, tickLabelData[i], i);
+            this.tickLabelClass._positionTickLabel(tick, labelValue, tickLabelData[i], i);
         });
 
         this.tickMarks.forEach((markEle,i) => {
-            this._positionTickMark(markEle,this.markSteps[i]);
+            this.tickMarkClass._positionTickMark(markEle,this.markSteps[i]);
         });
         
         var endCap = this.direction == 'down' || this.direction == 'left' ? this.startCap : this.endCap;
@@ -854,6 +429,7 @@ export class SliderUI {
        
     }
     
+    /* change DOM constraints and re-dimension elements as dynamic callbacks redraw UI **/
     _constrainContainer() {
         const { containerRect, parentHeight, parentWidth, progressThickness } = this._dimensions(true);
         const { tickLabels, startCap, endCap, vertical, tickMarks, progressElem } = this;
@@ -897,6 +473,7 @@ export class SliderUI {
         }
     }
     
+    /* hide granular elements that visually collide as responsive resizing requires */
     _responsiveUI() {
         
         const { config: { responsive }, orientation, direction, tickLabels, tickMarks } = this;
@@ -924,26 +501,14 @@ export class SliderUI {
         return this;
     }
 
-    _wbnValToProgVal(wbnVal: number) {
-        return this.slider._wbnValToProgVal(wbnVal);
-    }
-
-    _updateValue(val: number, wbnVal: number) {
-        return new Promise((res) => {
-            this.slider._updateValue(val, wbnVal)
-            res(this);
-        });
-    }
-
-    _updateBindings() {
-        return this.slider._updateBindings();
-    }
     
+    /* convert 1-100 <progress/> polyfill to actual slider value */
     _progValToWbnVal(progVal: number): number {
         const { config: { range: { min, max, decimals }}} = this;
-        return this._round(this._clamp(min + ((max - min) * progVal / 100), min, max), decimals);
+        return _round(_clamp(min + ((max - min) * progVal / 100), min, max), decimals);
     }
     
+    /* conform actual slider value to nearest step */
     _wbnValToStep(wbnVal: number): number {
         const steps = this.steps;
         var diff = Math.abs(Number(steps[0]) - wbnVal);
@@ -959,30 +524,19 @@ export class SliderUI {
         return steps[stepIndex];
     }
     
-    _updateProgress(e: any, tickPos?: number) {
-        return new Promise((res) => {
-            if (!this.progressDrag && !tickPos && e.touches === undefined) return;
-            
-            const { progressTop, progressLeft,progressBottom,progressRight,progressLength,directionAlias } = this._dimensions(true);
-            const { steps } = this;
-            const posProperty = this.vertical ? 'clientY' : 'clientX';
-            const clientPos = e ? e[posProperty] || e.touches[0][posProperty] : tickPos;
-            
-            const progressVal = {
-                'right':(clientPos - (this.vertical ? progressTop : progressLeft)) / progressLength * 100,
-                'left':((this.vertical ? progressBottom : progressRight) - clientPos) / progressLength * 100
-            }
-            
-            var wbnVal = this._wbnValToStep(this._progValToWbnVal(progressVal[directionAlias]));
-            const newVal = this._wbnValToProgVal(wbnVal);
-            
-            this._updateValue(newVal, wbnVal)
-                .then(() => { this._updateHandle(newVal) })
-                .then(() => { this._updateBindings() })
-            res(this);
+    /* destroy UI */
+    _destroyElements() {
+        
+        const { progressElem, handle, tickLabels, tickMarks } = this;
+        [progressElem,handle,...tickLabels,...tickMarks].forEach((ele) => {
+            ele.remove(); 
         });
-       
+        this.steps = [];
+        
     }
+    
+    
+    
 
 }
     
