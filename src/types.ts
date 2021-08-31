@@ -150,9 +150,5 @@ export interface Dimensions {
     positionOffsetProperty: string,
     thicknessProperty: string,
     directionAlias: string,
-    min: number,
-    max: number,
-    step: number | Function,
-    decimals: number,
     defaultValue: number
 }
