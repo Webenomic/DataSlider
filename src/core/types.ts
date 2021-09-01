@@ -94,10 +94,10 @@ export interface Tooltips extends Stylable {
 
 export interface Cap extends Stylable {
     onClick: Function,
-    label: Label   
+    label: Label
 }
 
-export interface Caps {
+export interface Caps extends Stylable {
     startCap: Cap,
     endCap: Cap
 }

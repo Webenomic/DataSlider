@@ -24,7 +24,7 @@ export class Events {
             
             const { slider, config, tickLabels, container, handle, progressElem, direction, config: { range: { min, max }} } = this.ui;
             const supportsTouch = window.supportsTouch(); 
-            
+
             __wbn$(container).on([ supportsTouch ? 'touchstart' : 'mousedown'], (e) => {
                 const { tickVal } = this.ui;
                 if (tickVal) {
@@ -36,7 +36,7 @@ export class Events {
                 this.progressDrag = true;
                 this._updateProgress(e);
                 config.onDrag(slider,slider.value);
-            }).on(['mousemove', 'touchmove'], (e) => {
+            }).on([supportsTouch ? 'touchmove' : 'mousemove'], (e) => {
                 this._updateProgress(e);
                 this.ui.config.onDrag(slider,slider.value);
             },{passive:false});
@@ -114,7 +114,6 @@ export class Events {
             const newVal = this.ui._wbnValToProgVal(wbnVal);
             
             this.ui._updateValue(newVal, wbnVal)
-                .then(() => { this.ui._updateHandle(newVal) })
                 .then(() => { this.ui._updateBindings() })
             res(this);
         });   

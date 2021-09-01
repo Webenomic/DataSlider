@@ -119,7 +119,9 @@ class Slider {
         const ui = this.ui; 
         if (ui.uiReady) {
             ui._updateTicks(val).then(() => {
-                ui._updateHandle(this._wbnValToProgVal(val));
+                const wbnVal = this._wbnValToProgVal(val);
+                ui._updateHandle(wbnVal);
+                ui._updateCaps()
             }).then(() => {
                 ui._assignAttributes();
             }).then(() => {

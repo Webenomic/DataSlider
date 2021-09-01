@@ -5,6 +5,7 @@ import { Tooltip } from './tooltip';
 import { TickMarks } from './tick_marks';
 import { TickLabels } from './tick_labels';
 import { Handle } from './handle';
+import { Caps } from './caps';
 import { Events } from './events';
 
 const __wbn$ = function(args?: any) { return new WebenomicCore(args); }
@@ -23,7 +24,7 @@ declare global {
     }
 }
 
-Window.prototype.supportsTouch = () => { return 'ontouchstart' in window || navigator.msMaxTouchPoints };
+Window.prototype.supportsTouch = () => { return 'ontouchstart' in window };
 HTMLElement.prototype.hide = function() { this.style.display = 'none' };
 HTMLElement.prototype.show = function() { this.style.display = 'block' };
 Element.prototype.rect = function() { return this.getBoundingClientRect(); };
@@ -57,11 +58,17 @@ export class SliderUI {
     
     startCap: HTMLElement | null;
     endCap: HTMLElement | null;
+    capClass: Caps;
+    
     uiCreated: Promise<any>;
     uiReady: boolean;
     dimensions: Dimensions | null;
     
     /** alias methods from associated classes */
+    _updateCaps() {
+        return this.capClass._updateCaps();
+    }
+    
     _updateTicks(val: number) {
         return this.tickLabelClass._updateTicks(val);
     }
@@ -91,7 +98,10 @@ export class SliderUI {
             slider: slider,
             config: config,
             parent: parent,
-            uiReady: false
+            uiReady: false, 
+            orientation: config.orientation,
+            vertical: config.orientation === 'vertical',
+            direction: config.direction
         });
 
          this.uiCreated = new Promise((res,rej) => {
@@ -109,7 +119,7 @@ export class SliderUI {
             }).then(() => {
                 new Tooltip(this,config);
             }).then(() => {
-                this._createCaps()
+                //this._createCaps()
             }).then(() => {
                 new Events(this,config);
             }).then(() => {
@@ -178,18 +188,25 @@ export class SliderUI {
     _createElements() {
         return new Promise((res) => {
             
-            const { config } = this;
+            const { config, parent, vertical, orientation, direction } = this;
+           
+            /* create start cap, if present */
+            this.capClass = new Caps(this,config);
+            this.capClass._createStartCap();
+            
             
             /* create container */
             this.container = __wbn$().create('div',true).setAttr('tabindex','0').elem;
             this.parent.appendChild(this.container);
-            this.orientation = config.orientation;
-            this.vertical = this.orientation === 'vertical';
+            
+          
             const containerClass = this.container.classList;
-            [`${CSSNamespace}container`,this.orientation].forEach((className) => { containerClass.add(className); }); 
+            [`${CSSNamespace}container`,orientation].forEach((className) => { containerClass.add(className); }); 
+            
+            /* create end cap, if present */
+            this.capClass._createEndCap();
             
             /* CSS-specific left-right/up-down direction */
-            this.direction = config.direction;
             const directionToCSS = {
                 'left':'rtl',
                 'down':'ltr',
@@ -198,14 +215,14 @@ export class SliderUI {
             }
             
             /* create <progress/> polyfill element */
-            const parentHeight = parseInt(window.getComputedStyle(this.parent, null).getPropertyValue('height')); 
+            const parentHeight = parseInt(window.getComputedStyle(parent, null).getPropertyValue('height'));
             const _progressElem = __wbn$().create('progress', true)
                                           .setClass(`${CSSNamespace}slider`)
                                           .setAttr('value', config.defaultValue.toString())
                                           .setAttr('tabindex', '0')
                                           .setStyle({
-                                                direction:directionToCSS[this.direction],
-                                                width:this.vertical ? `${parentHeight}px` : 'inherit'
+                                                direction:directionToCSS[direction],
+                                                width:vertical ? `${parentHeight}px` : 'inherit'
                                           })
                                           .elem;
                                           
@@ -247,11 +264,11 @@ export class SliderUI {
     /* assign attributes and polyfill <progress/> CSS variables */ 
     _assignAttributes() {
         return new Promise((res) => {
-            const { height } = this._dimensions();
+           
             const { config, slider, config: { range: {min, max}}} = this;
             
             __wbn$(this.progressElem)
-                .setStyle({ 'height': height })
+                .setStyle({ 'height': `${config.bar.thickness}px` })
                 .setAttr('min', '0')
                 .setAttr('max', '100')
                 .setAttr('wbn-min', min.toString())
@@ -349,71 +366,18 @@ export class SliderUI {
          }
          return [xPoints[directionAlias],yPoint['top']];
     }
-    
-    _createCaps() {
-        return new Promise((res) => {
-            
-            const { caps: {startCap,endCap} } = this.config;
-            if (!startCap && !endCap) res(this);
-            
-            const { slider, vertical, direction, progressElem } = this;
-            const { positionProperty, progressRect, progressThickness, positionOffsetProperty } = this._dimensions();
-            
-            const capProps =  {
-                    'up' : ['top','bottom'],
-                    'down' : ['bottom','top'],
-                    'right' : ['left','right'],
-                    'left': ['right','left'] 
-            };
-            
-            let [thisStartCap,thisEndCap] = vertical ? [endCap,startCap] : [startCap,endCap];    
-            [thisStartCap, thisEndCap].forEach((capConfig, i) => {
-                
-                if (!capConfig) {     
-                    i == 0 ? [this.startCap = null] : [this.endCap == null];
-                    return;
-                }
-                
-                const capObj = i == 0 ? 
-                {
-                    prop: capProps[direction][0],
-                    desc: 'start'
-                } : {
-                    prop: capProps[direction][1],
-                    desc: 'end'
-                };
-                
-                const _capStyle = _valOrFunc(capConfig.style,[slider,slider.value],{}); 
-                const _capElement = __wbn$().create('div',true)
-                                    .setClass(`${CSSNamespace}cap ${capObj.desc} ${capConfig.className || ''}`)
-                                    .setStyle(_capStyle)
-                                    .html(capConfig.label.text)
-                                    .elem;
-                                                
-                this.parent.appendChild(_capElement);
-                _capElement.style[positionProperty] = progressRect[capObj.prop];
-                _capElement.style[vertical ? 'left' : 'top'] = progressElem[positionOffsetProperty] + (vertical ? 0 : progressThickness/2) - (_capElement.rect()[vertical ? 'width' : 'height']/2)
-    
-                i == 0 ? [this.startCap = _capElement] : [this.endCap = _capElement];
-                
-            });
-            
-            //this._constrainContainer();
-            res(this);
-        });
-    }
-    
+     
     /* refresh elements with resizing and dynamic callbacks **/
     _refreshUI() {
         
-        const { progressBottom,progressRight,positionProperty } = this._dimensions();
-        const {vertical,progressElem,slider: { config: { ticks }}} = this;
+        const { progressElem,slider: { config: { ticks }},parent,container} = this;
         const tickLabelData = ticks.labels.data;
 
         const progressValue = Number(progressElem.value);
         
+        this._updateCaps();
         this._constrainContainer();
-        
+
         this.tickLabels.forEach((tick, i) => {
             const labelValue = tickLabelData[i] ? tickLabelData[i].value : tick
             this.tickLabelClass._positionTickLabel(tick, labelValue, tickLabelData[i], i);
@@ -422,11 +386,6 @@ export class SliderUI {
         this.tickMarks.forEach((markEle,i) => {
             this.tickMarkClass._positionTickMark(markEle,this.markSteps[i]);
         });
-        
-        var endCap = this.direction == 'down' || this.direction == 'left' ? this.startCap : this.endCap;
-        if (endCap) {
-            endCap.style[positionProperty] = vertical ? `${progressBottom}px` : `${progressRight}px`;
-        }
         
         this._responsiveUI()._updateHandle(progressValue);
 
@@ -479,6 +438,7 @@ export class SliderUI {
                 width: `${containerHeight}px`,
             }) 
         }
+        this._updateCaps();
     }
     
     /* hide granular elements that visually collide as responsive resizing requires */
