@@ -122,6 +122,7 @@ class Slider {
                 const wbnVal = this._wbnValToProgVal(val);
                 ui._updateHandle(wbnVal);
                 ui._updateCaps()
+                ui._updateTickMarks();
             }).then(() => {
                 ui._assignAttributes();
             }).then(() => {

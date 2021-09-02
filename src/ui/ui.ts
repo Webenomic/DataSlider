@@ -69,6 +69,10 @@ export class SliderUI {
         return this.capClass._updateCaps();
     }
     
+    _updateTickMarks() { 
+        this.tickMarkClass._updateTickMarks();
+    }
+    
     _updateTicks(val: number) {
         return this.tickLabelClass._updateTicks(val);
     }

@@ -21,6 +21,7 @@ export class TickMarks {
             const { container, slider, config: { range: { min, max, decimals }, ticks: { marks: tickMarkConfig }}} = this.ui;
             this.ui.markSteps = [];
             this.ui.tickMarks = [];
+            var tickIndex = 0;
             tickMarkConfig.forEach((markSet) => {
                 const markRange = markSet.range;
                 var step = markRange?.step;
@@ -64,7 +65,7 @@ export class TickMarks {
                     const markSelectedStyle = _valOrFunc(markSet?.selectedStyle,[slider, markValue],markStyle);
                     
                     Object.assign(markEle.style,markStyle); 
-
+                    Object.assign(markEle,{ position: markSet.position, markSet: markSet, markValue: markValue });
                     const thisMarkEle = __wbn$(markEle);
                     
                    thisMarkEle.on('mouseover',() => {
@@ -73,12 +74,13 @@ export class TickMarks {
                         thisMarkEle.setStyle(slider.value == markValue ? markSelectedStyle : markStyle);  
                     }).on('selected',() => {
                         thisMarkEle.setStyle(markSelectedStyle);
-                        this.ui._updateHandle(markValue);
+                        this._positionTickMark(markEle,markValue);
+                        //this.ui._updateHandle(markValue);
                     }).on('deselected',() => {
                          thisMarkEle.setStyle(markStyle);
                     });
                     
-                    Object.assign(markEle,{ position: markSet.position });
+                   
                     container.appendChild(markEle);
                     this.ui.tickMarks.push(markEle);
                 });
@@ -103,7 +105,7 @@ export class TickMarks {
             const [deselectedEvent, selectedEvent] = ['deselected', 'selected'].map((customEvent) => { return new CustomEvent(customEvent); });
             if (markValue == slider.value)
                 markEle.dispatchEvent(deselectedEvent);
-            const markPosition = _valOrFunc(markEle.position,[slider, markValue],0);
+            const markPosition = _valOrFunc(markEle.markSet.position,[slider, markValue],0);
             const markPoints = this.ui._tickPoint(markEle, markValue, markPosition);
             
             
@@ -113,5 +115,17 @@ export class TickMarks {
             //re-register selected state, if present
             if (markValue == slider.value) markEle.dispatchEvent(selectedEvent);
             return this;
+    }
+    
+    _updateTickMarks() {
+        const { slider} = this.ui;
+        this.ui.tickMarks.forEach((markEle,i) => {
+            const markSet = markEle.markSet;
+            if (typeof markSet.style === 'function') {
+                const markStyle = _valOrFunc(markSet?.style,[slider,Number(markEle.markValue) ],{});
+                Object.assign(markEle.style,markStyle); 
+                this._positionTickMark(markEle,markEle.markValue);
+            }
+        });
     }
 }
