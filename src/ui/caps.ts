@@ -92,7 +92,7 @@ export class Caps {
         
         const capProp = capObj.capType == 'end' ? (vertical ? 'top' : 'right') : (vertical ? 'bottom' : 'left');
         const capOffset = capObj.capElem.rect()[vertical ? 'height' : 'width'];
-        const capPos = container[vertical ? 'offsetTop' : 'offsetLeft']  + (capObj.capType === 'end' ? progressRect[vertical ? 'height' : 'width']  : -capOffset); 
+        const capPos = container[vertical ? 'offsetTop' : 'offsetLeft']  + (capObj.capType === 'end' ? progressRect[vertical ? 'height' : 'width'] + (vertical ? capOffset : 0)  : (vertical ? 0 : -capOffset)); 
          
         capObj.capElem.style[vertical ? 'top' : 'left'] = `${capPos}px`;
         capObj.capElem.style[vertical ? 'left' : 'top'] = `${progressElem[positionOffsetProperty] + (vertical ? 0 : progressThickness/2) - (capObj.capElem.rect()[vertical ? 'width' : 'height']/2)}px`;

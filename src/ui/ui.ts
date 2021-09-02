@@ -73,27 +73,14 @@ export class SliderUI {
         this.tickMarkClass._updateTickMarks();
     }
     
-    _updateTicks(val: number) {
-        return this.tickLabelClass._updateTicks(val);
-    }
-    
     _updateHandle(val: number) {
         return this.handleClass._updateHandle(val);
     }
     
-    _updateValue(val: number, wbnVal: number) {
-        return new Promise((res) => {
-            this.slider._updateValue(val, wbnVal)
-            res(this);
-        });
-    }
-        
     _wbnValToProgVal(wbnVal: number) {
         return this.slider._wbnValToProgVal(wbnVal);
     }
-    _updateBindings() {
-        return this.slider._updateBindings();
-    }
+
     /** end alias methods **/   
     
     constructor(parent: any, config: Options, slider: any) {
@@ -472,7 +459,13 @@ export class SliderUI {
         });
         return this;
     }
-
+    
+    _updateTicks(val: number) {
+        const [deselectedEvent, selectedEvent] = ['deselected','selected'].map((customEvent) => { return new CustomEvent(customEvent) });
+        this.tickLabels.concat(this.tickMarks).forEach((tick) => { (Number(tick.getAttribute('wbn-value')) === val) ? [tick.classList.add('wbn_selected'),tick.dispatchEvent(selectedEvent)] : [tick.classList.remove('wbn_selected'),tick.dispatchEvent(deselectedEvent)] });
+        return this;
+    }
+    
     
     /* convert 1-100 <progress/> polyfill to actual slider value */
     _progValToWbnVal(progVal: number): number {

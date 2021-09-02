@@ -70,14 +70,17 @@ export class TickMarks {
                     
                    thisMarkEle.on('mouseover',() => {
                         thisMarkEle.setStyle(markHoverStyle);  
+                        this._positionTickMark(markEle,markValue,true);
                     }).on('mouseout',() => {
-                        thisMarkEle.setStyle(slider.value == markValue ? markSelectedStyle : markStyle);  
+                        thisMarkEle.setStyle(slider.value == markValue ? markSelectedStyle : markStyle);
+                        this._positionTickMark(markEle,markValue,true);  
                     }).on('selected',() => {
                         thisMarkEle.setStyle(markSelectedStyle);
-                        this._positionTickMark(markEle,markValue);
+                        this._positionTickMark(markEle,markValue,true);
                         //this.ui._updateHandle(markValue);
                     }).on('deselected',() => {
                          thisMarkEle.setStyle(markStyle);
+                         this._positionTickMark(markEle,markValue,true);
                     });
                     
                    
@@ -97,23 +100,29 @@ export class TickMarks {
         });
     }
     
-    _positionTickMark(markEle: any, markValue: number) {
+    _positionTickMark(markEle: any, markValue: number, skipEvents?: boolean | false) {
             const { vertical, slider } = this.ui;
             const { positionProperty } = this.ui._dimensions();
-  
-            //re-register default style if tickMark is in selected state
-            const [deselectedEvent, selectedEvent] = ['deselected', 'selected'].map((customEvent) => { return new CustomEvent(customEvent); });
-            if (markValue == slider.value)
-                markEle.dispatchEvent(deselectedEvent);
+            
             const markPosition = _valOrFunc(markEle.markSet.position,[slider, markValue],0);
             const markPoints = this.ui._tickPoint(markEle, markValue, markPosition);
+            
+            //re-register default style if tickMark is in selected state
+            if (!skipEvents) {
+                const [deselectedEvent, selectedEvent] = ['deselected', 'selected'].map((customEvent) => { return new CustomEvent(customEvent); });
+                if (markValue == slider.value) {
+                    markEle.dispatchEvent(deselectedEvent);
+                    markEle.dispatchEvent(selectedEvent);
+                }
+            }
+            
             
             
             markEle.style[vertical ? 'left' : 'top'] = `${markPoints[1]}px`;
             markEle.style[positionProperty] = `${markPoints[0]}px`;
             
             //re-register selected state, if present
-            if (markValue == slider.value) markEle.dispatchEvent(selectedEvent);
+            
             return this;
     }
     
@@ -124,7 +133,7 @@ export class TickMarks {
             if (typeof markSet.style === 'function') {
                 const markStyle = _valOrFunc(markSet?.style,[slider,Number(markEle.markValue) ],{});
                 Object.assign(markEle.style,markStyle); 
-                this._positionTickMark(markEle,markEle.markValue);
+                this._positionTickMark(markEle,markEle.markValue,true);
             }
         });
     }

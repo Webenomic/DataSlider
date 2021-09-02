@@ -99,9 +99,9 @@ export class TickLabels {
             var _tickClick = (e: KeyboardEvent) => {
                 if (e.which && e.which != 13) return;
                 this.ui.tickLabels.forEach((elem) => elem.dispatchEvent(deselectedEvent));
-                
-                me._updateTicks(tickValue)
-                  .then(() => this.ui._updateValue(this.ui._wbnValToProgVal(tickValue),tickValue))
+                if (tickValue == Number(tickEle.getAttribute('wbn-value'))) tickEle.dispatchEvent(selectedEvent)
+                ///me.ui._updateTicks(tickValue)
+                  this.ui._updateValue(this.ui._wbnValToProgVal(tickValue),tickValue)
                   .then(() => this.ui._updateBindings());
                 
                 tickEle.classList.add('wbn_selected');
@@ -125,16 +125,6 @@ export class TickLabels {
             tickEle._eventHandler = _tickClick;
         }
        
-    }
-    
-    async _updateTicks(val: number) {
-        const ticksUpdated = new Promise((res) => {
-            const [deselectedEvent, selectedEvent] = ['deselected','selected'].map((customEvent) => { return new CustomEvent(customEvent) });
-            this.ui.tickLabels.concat(this.ui.tickMarks).forEach((tick) => { (Number(tick.getAttribute('wbn-value')) === val) ? [tick.classList.add('wbn_selected'),tick.dispatchEvent(selectedEvent)] : [tick.classList.remove('wbn_selected'),tick.dispatchEvent(deselectedEvent)] });
-            res(this);
-        });
-        
-        return await ticksUpdated;
     }
     
 }

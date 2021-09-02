@@ -55,9 +55,8 @@ class Slider {
         const me = this;
         const { bindVarName, bindVarScope, config: { defaultValue, dataBinding: { scope }} } = this;
         scope.wbnScope = new Proxy(me.wbnBindScope, {
-            set(target, prop, val) { 
-                me._updateValue(me._wbnValToProgVal(val),val)
-                    .then(() => { me._updateBindings(); });
+            set(target, prop, val) {
+                me.update(val);
                 return true;
             },
             get(target, prop) {
@@ -78,7 +77,8 @@ class Slider {
         isLoading ? progClassList.add(progClass) : progClassList.remove(progClass);
     }
     
-    update(val: number) {
+    update(val: any) {
+        val = Number(val);
         return this._updateValue(this._wbnValToProgVal(val),val)
             .then(() => { this._updateBindings(); });
     }
@@ -116,18 +116,17 @@ class Slider {
             ele.tagName == 'INPUT' ? ele.value = finalVal : ele.innerHTML = finalVal;
         });
         
-        const ui = this.ui; 
+        const ui = this.ui;
         if (ui.uiReady) {
-            ui._updateTicks(val).then(() => {
-                const wbnVal = this._wbnValToProgVal(val);
-                ui._updateHandle(wbnVal);
-                ui._updateCaps()
-                ui._updateTickMarks();
-            }).then(() => {
-                ui._assignAttributes();
-            }).then(() => {
-                this.config.onUpdate(this,val);
-            });
+            ui._assignAttributes();
+            
+            const wbnVal = this._wbnValToProgVal(newVal);
+            ui._updateHandle(wbnVal);
+            ui._updateCaps()
+            ui._updateTicks(newVal);
+            ui._updateTickMarks();
+            this.config.onUpdate(this,newVal);
+
         }
         
         return this;

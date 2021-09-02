@@ -76,15 +76,22 @@ export class Events {
                         if (e.shiftKey) increment *= 5;
                         const newValue = Number(slider.value) + (increment * Number(config.range.step));
                         slider.update(newValue);
+                        e.preventDefault();
                     }    
                 });
             }
             
+
+            const changeFunc = (e) => {
+                const ele = e.currentTarget; 
+                slider.update(ele.value);
+                e.preventDefault();
+            };
+            
             document.querySelectorAll('input[wbn-bind]').forEach((ele: any) => {
-                var eleBindVarName = ele.getAttribute('wbn-bind');
-                var changeFunc = () => { window.wbnScope[eleBindVarName] = ele.value; };
+               
                 ele.addEventListener('change', changeFunc);
-                ele.addEventListener('keyup', changeFunc);
+                ele.addEventListener('input', changeFunc);
                 ele.addEventListener('blur', () => {
                     if (ele.value > max) ele.value = max;
                     if (ele.value < min) ele.value = min;
@@ -99,6 +106,7 @@ export class Events {
     /* global event endpoint for updating slider value */
     _updateProgress(e: any, tickPos?: number) {
         return new Promise((res) => {
+            const { slider } = this.ui; 
             if (!this.progressDrag && !tickPos && e.touches === undefined) return;
             const { vertical } = this.ui;
             const { progressTop, progressLeft,progressBottom,progressRight,progressLength,directionAlias } = this.ui._dimensions(true);
@@ -113,8 +121,8 @@ export class Events {
             var wbnVal = this.ui._wbnValToStep(this.ui._progValToWbnVal(progressVal[directionAlias]));
             const newVal = this.ui._wbnValToProgVal(wbnVal);
             
-            this.ui._updateValue(newVal, wbnVal)
-                .then(() => { this.ui._updateBindings() })
+            slider._updateValue(newVal, wbnVal)
+                .then(() => { slider._updateBindings() })
             res(this);
         });   
     }
