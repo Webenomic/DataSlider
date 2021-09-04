@@ -17,7 +17,7 @@ export class TickLabels {
     
     _createTickLabels() {
         
-        return new Promise((res) => {
+        //return new Promise((res) => {
             const {slider,container,slider: { config: { range: { min, max }, ticks: { labels: tickLabels }}}} = this.ui;
             var {data: tickData} = tickLabels;
         
@@ -78,8 +78,9 @@ export class TickLabels {
                 
                 
             });
-            res(this);
-        });
+            //res(this);
+        //});
+        return this;
     }    
     
     _positionTickLabel(tickEle: any, tickValue: number, tickData: TickLabel, tickIndex: number) {
@@ -87,7 +88,7 @@ export class TickLabels {
         const { positionProperty } = this.ui._dimensions();
         if (tickValue < min || tickValue > max) return;
         const me = this;
-        let tickPosition = _valOrFunc(tickLabels.position,[slider,tickValue,tickIndex],0);
+        const tickPosition = _valOrFunc(tickData.position || tickLabels.position,[slider,tickValue,tickIndex],0);
         const tickPoints = this.ui._tickPoint(tickEle,tickValue,tickPosition);
         tickEle.style[positionProperty] = `${tickPoints[0]}px`;
         tickEle.style[vertical ? 'left' : 'top'] = `${tickPoints[1]}px`;

@@ -32,7 +32,6 @@ export class Events {
                     return;
                 }
                 document.body.classList.add(`${CSSNamespace}select_disabled`);
-                config.onDragStart(slider,slider.value);
                 this.progressDrag = true;
                 this._updateProgress(e);
                 config.onDrag(slider,slider.value);

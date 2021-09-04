@@ -9,7 +9,7 @@ export default {
         {
             file: 'dist/data-slider.js',
             format: 'umd',
-            name: 'Webenomic Data-Slider',
+            name: 'Data-Slider',
             exports: 'named',
             banner: `/** @license: MIT \n Webenomic Data-Slider v${version} | Copyright (c) ${new Date().getFullYear()} | Ben Silverman, Webenomic LLC \n**/`
         },

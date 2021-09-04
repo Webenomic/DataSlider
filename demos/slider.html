@@ -247,7 +247,7 @@ window.onload = () => {
 	Array.from(document.getElementsByClassName('slider')).forEach((ele) => {
 	   const [min,max,step] = ['min','max','step'].map((prop) => { return Number(ele.getAttribute(prop)); });
 	   sliderFoo = new DataSlider(ele,{
-		   defaultValue: 10,
+		   defaultValue: 40,
 		   bar: {
 			   borderRadius:10,
 			   thickness:10
@@ -264,7 +264,7 @@ window.onload = () => {
 					   step:1
 				   },
 				   position: (slider,val) => {
-					   return 20;   
+					   return 0;   
 				   },
 				   height:10,
 				   width:1,
@@ -276,7 +276,7 @@ window.onload = () => {
 
 				   },
 				   selectedStyle: {
-					   height:'40px'   
+					   height:'60px'   
 				   }
 			   }],
 			   labels: {
@@ -285,9 +285,13 @@ window.onload = () => {
 					   value:20,
 					   label:{
 						   text:(slider,val) => {
-	                           return 'val'+slider.value;
+							   console.log(slider.value);
+	                           return 'val'+val;
 	                       }
 					   },
+					   position:(slider,val) => {
+						   return slider.value;
+					   }
 				   },
 				   {
 					   value:40,
@@ -295,17 +299,14 @@ window.onload = () => {
                            text:(slider,val) => {
                                return 'val';
                            }
-                       },
-                       position:20
+                       }
 				   }
 				   ],
 				   style:{
 				    backgroundColor:'#e4a114',
-				    height:'40px',
-				    width:'40px'
 				   },
 				   position:(slider,val) => {
-					   return val == 20 ? -20 : 20;
+					   return slider.value;   
 				   }
 			   }
 		   },

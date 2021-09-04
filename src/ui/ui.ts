@@ -96,34 +96,46 @@ export class SliderUI {
         });
 
          this.uiCreated = new Promise((res,rej) => {
+            slider.value = config.defaultValue;
             this._createElements()
             .then(() => {
-                this._assignAttributes()
+                this._assignAttributes();
+                console.log('assigned attributes');
             }).then(() => {
-                this._createSteps()
+                this._createSteps();
+                console.log('created steps');
             }).then(() => {
                 this.handleClass = new Handle(this,config);
+                console.log('new Handle');
             }).then(() => {
                 this.tickLabelClass = new TickLabels(this,config);
+                console.log('new Tick Labels');
             }).then(() => {
                 this.tickMarkClass = new TickMarks(this,config);
+                 console.log('new Tick Marks');
             }).then(() => {
                 new Tooltip(this,config);
-            }).then(() => {
-                //this._createCaps()
+                 console.log('new Tooltip');
             }).then(() => {
                 new Events(this,config);
+                 console.log('new Events');
             }).then(() => {
                 this._refreshUI()
+                 console.log('refreshUI');
             }).then(() => {
                 this._responsiveUI()
+                 console.log('responsiveUI');
             }).then(() => {
                 this.dimensions = this._dimensions();
                 this.uiReady = true;
+                console.log('ui ready');
+                
+                
             });
+            
             res(this);
-
         });
+        
         return this;
     } 
     
@@ -361,26 +373,28 @@ export class SliderUI {
     /* refresh elements with resizing and dynamic callbacks **/
     _refreshUI() {
         
-        const { progressElem,slider: { config: { ticks }},parent,container} = this;
-        const tickLabelData = ticks.labels.data;
-
-        const progressValue = Number(progressElem.value);
-        
-        this._updateCaps();
-        this._constrainContainer();
-
-        this.tickLabels.forEach((tick, i) => {
-            const labelValue = tickLabelData[i] ? tickLabelData[i].value : tick
-            this.tickLabelClass._positionTickLabel(tick, labelValue, tickLabelData[i], i);
+        return new Promise((res,rej) => {
+            const { progressElem,slider: { config: { ticks }},parent,container} = this;
+            const tickLabelData = ticks.labels.data;
+    
+            const progressValue = Number(progressElem.value);
+            
+            this._updateCaps();
+            this._constrainContainer();
+    
+            this.tickLabels.forEach((tick, i) => {
+                const labelValue = tickLabelData[i] ? tickLabelData[i].value : tick
+                this.tickLabelClass._positionTickLabel(tick, labelValue, tickLabelData[i], i);
+            });
+    
+            this.tickMarks.forEach((markEle,i) => {
+                this.tickMarkClass._positionTickMark(markEle,this.markSteps[i]);
+            });
+            
+            this._responsiveUI()._updateHandle(progressValue);
+    
+            res(this);
         });
-
-        this.tickMarks.forEach((markEle,i) => {
-            this.tickMarkClass._positionTickMark(markEle,this.markSteps[i]);
-        });
-        
-        this._responsiveUI()._updateHandle(progressValue);
-
-        return this;
        
     }
     
@@ -461,9 +475,12 @@ export class SliderUI {
     }
     
     _updateTicks(val: number) {
-        const [deselectedEvent, selectedEvent] = ['deselected','selected'].map((customEvent) => { return new CustomEvent(customEvent) });
-        this.tickLabels.concat(this.tickMarks).forEach((tick) => { (Number(tick.getAttribute('wbn-value')) === val) ? [tick.classList.add('wbn_selected'),tick.dispatchEvent(selectedEvent)] : [tick.classList.remove('wbn_selected'),tick.dispatchEvent(deselectedEvent)] });
-        return this;
+        
+        return new Promise((res,rej) => {
+            const [deselectedEvent, selectedEvent] = ['deselected','selected'].map((customEvent) => { return new CustomEvent(customEvent) });
+            this.tickLabels.concat(this.tickMarks).forEach((tick) => { (Number(tick.getAttribute('wbn-value')) === val) ? [tick.classList.add('wbn_selected'),tick.dispatchEvent(selectedEvent)] : [tick.classList.remove('wbn_selected'),tick.dispatchEvent(deselectedEvent)] });
+            res(this);
+        });
     }
     
     

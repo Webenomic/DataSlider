@@ -29,15 +29,19 @@ class Slider {
         
         startUp().then(() => {
             const { config: {dataBinding: { property: bindVarName, scope: bindVarScope }}, ui } = this;
-            ui.uiCreated.then(() => {
-                this._createProxy().config.onReady(this);
-            });
             
             Object.assign(this,{
                 parent: parent,
                 bindVarName: bindVarName,
                 bindVarScope: bindVarScope,
             });
+            
+            ui.uiCreated.then(() => {
+                console.log('ui ready in DS');
+                this._createProxy().config.onReady(this);
+            });
+            
+            
         });
     }
     
@@ -66,7 +70,7 @@ class Slider {
 
         scope.wbnScope[bindVarName] = bindVarScope[bindVarName] || null;
         
-        this._wbnValToProgVal(defaultValue);
+        //this._wbnValToProgVal(defaultValue);
         this.update(defaultValue);
         return this;
     }
@@ -105,6 +109,7 @@ class Slider {
     }
     
     _updateBindings() {
+
         const { config:{ range:{ min,max }, dataBinding: { transform }}, bindVarName, wbnBindScope } = this;
         
         var val = wbnBindScope[bindVarName];
@@ -117,15 +122,18 @@ class Slider {
         });
         
         const ui = this.ui;
+
         if (ui.uiReady) {
+            ui._updateTicks(newVal);
             ui._assignAttributes();
             
             const wbnVal = this._wbnValToProgVal(newVal);
             ui._updateHandle(wbnVal);
             ui._updateCaps()
-            ui._updateTicks(newVal);
+
             ui._updateTickMarks();
             this.config.onUpdate(this,newVal);
+           
 
         }
         

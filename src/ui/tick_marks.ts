@@ -61,21 +61,21 @@ export class TickMarks {
                         .elem;   
                     
                     const markStyle = _valOrFunc(markSet?.style,[slider, markValue],{});
-                    const markHoverStyle = _valOrFunc(markSet?.hoverStyle,[slider, markValue],markStyle);
-                    const markSelectedStyle = _valOrFunc(markSet?.selectedStyle,[slider, markValue],markStyle);
+                    const markHoverStyle = _valOrFunc(markSet?.hoverStyle,[slider, markValue],null);
+                    const markSelectedStyle = _valOrFunc(markSet?.selectedStyle,[slider, markValue],null);
                     
                     Object.assign(markEle.style,markStyle); 
                     Object.assign(markEle,{ position: markSet.position, markSet: markSet, markValue: markValue });
                     const thisMarkEle = __wbn$(markEle);
                     
                    thisMarkEle.on('mouseover',() => {
-                        thisMarkEle.setStyle(markHoverStyle);  
+                        thisMarkEle.setStyle(markHoverStyle || markStyle); 
                         this._positionTickMark(markEle,markValue,true);
                     }).on('mouseout',() => {
-                        thisMarkEle.setStyle(slider.value == markValue ? markSelectedStyle : markStyle);
+                        thisMarkEle.setStyle(slider.value === markValue && markSelectedStyle ? markSelectedStyle : markStyle);
                         this._positionTickMark(markEle,markValue,true);  
                     }).on('selected',() => {
-                        thisMarkEle.setStyle(markSelectedStyle);
+                        thisMarkEle.setStyle(markSelectedStyle || markStyle);
                         this._positionTickMark(markEle,markValue,true);
                         //this.ui._updateHandle(markValue);
                     }).on('deselected',() => {
