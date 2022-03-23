@@ -1,5 +1,5 @@
 {
-  "name": "@webenomic/DataSlider",
+  "name": "@webenomic/dataslider",
   "version": "1.0.0",
   "description": "Dependency-free UI module for creating range slider inputs, seek bars, and progress bars.",
   "main": "dist/dataslider.js",
